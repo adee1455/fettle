@@ -1,0 +1,55 @@
+name: QuickKit
+options:
+  bundleIdPrefix: dev.adee
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+  defaultConfig: Debug
+settings:
+  SWIFT_VERSION: "6.0"
+  MACOSX_DEPLOYMENT_TARGET: "14.0"
+  SWIFT_STRICT_CONCURRENCY: complete
+targets:
+  QuickKit:
+    type: application
+    platform: macOS
+    sources:
+      - path: QuickKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.adee.QuickKit
+        PRODUCT_NAME: QuickKit
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: QuickKit
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
+        INFOPLIST_KEY_NSHumanReadableCopyright: "Copyright © 2026"
+        INFOPLIST_KEY_NSPrincipalClass: NSApplication
+        CODE_SIGN_ENTITLEMENTS: QuickKit/QuickKit.entitlements
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "-"
+        ENABLE_HARDENED_RUNTIME: YES
+        COMBINE_HIDPI_IMAGES: YES
+        ENABLE_TESTABILITY: YES
+        LD_RUNPATH_SEARCH_PATHS:
+          - "$(inherited)"
+          - "@executable_path/../Frameworks"
+    scheme:
+      testTargets:
+        - QuickKitTests
+  QuickKitTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: QuickKitTests
+    dependencies:
+      - target: QuickKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.adee.QuickKitTests
+        GENERATE_INFOPLIST_FILE: YES
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "-"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/QuickKit.app/Contents/MacOS/QuickKit"
+        BUNDLE_LOADER: "$(TEST_HOST)"
