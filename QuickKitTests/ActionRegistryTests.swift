@@ -1,0 +1,126 @@
+import XCTest
+@testable import QuickKit
+
+final class ActionRegistryTests: XCTestCase {
+    private let registry = ActionRegistry()
+
+    func testFileKindCasesExistForRegistry() {
+        XCTAssertEqual(FileKind.allCases.count, 5)
+        XCTAssertEqual(ActionRingMode.allCases.map(\.rawValue), ["conversion", "editing", "fileActions"])
+    }
+
+    func testEmptySelectionReturnsNoActions() {
+        let actions = registry.actions(for: [], toolStatuses: [:])
+        XCTAssertTrue(actions.isEmpty)
+    }
+
+    func testImageActionsForSinglePNG() {
+        let png = FileItem(
+            url: URL(fileURLWithPath: "/tmp/sample.png"),
+            type: FileType(kind: .image, identifier: "public.png", localizedDescription: "PNG")
+        )
+        let actions = registry.actions(for: [png], toolStatuses: [:])
+
+        XCTAssertFalse(actions.isEmpty)
+        let ids = actions.map(\.id)
+        XCTAssertTrue(ids.contains("png-to-jpeg"))
+        XCTAssertTrue(ids.contains("jpeg-to-png"))
+        XCTAssertTrue(ids.contains("image-to-webp"))
+        XCTAssertTrue(ids.contains("resize-50"))
+        XCTAssertTrue(ids.contains("reveal-in-finder"))
+
+        // Video and PDF actions must NOT appear
+        XCTAssertFalse(ids.contains("video-to-mp4-h264"))
+        XCTAssertFalse(ids.contains("merge-pdfs"))
+    }
+
+    func testMergePDFRequiresMinTwo() {
+        let pdf1 = FileItem(
+            url: URL(fileURLWithPath: "/tmp/doc1.pdf"),
+            type: FileType(kind: .pdf, identifier: "com.adobe.pdf", localizedDescription: "PDF")
+        )
+        let pdf2 = FileItem(
+            url: URL(fileURLWithPath: "/tmp/doc2.pdf"),
+            type: FileType(kind: .pdf, identifier: "com.adobe.pdf", localizedDescription: "PDF")
+        )
+
+        // Single PDF
+        let singleActions = registry.actions(for: [pdf1], toolStatuses: [:])
+        XCTAssertFalse(singleActions.map(\.id).contains("merge-pdfs"))
+
+        // Two PDFs
+        let twoActions = registry.actions(for: [pdf1, pdf2], toolStatuses: [:])
+        XCTAssertTrue(twoActions.map(\.id).contains("merge-pdfs"))
+    }
+
+    func testVideoActionsHiddenWithoutFFmpeg() {
+        let video = FileItem(
+            url: URL(fileURLWithPath: "/tmp/clip.mp4"),
+            type: FileType(kind: .video, identifier: "public.mpeg-4", localizedDescription: "MPEG-4")
+        )
+
+        let actionsMissing = registry.actions(for: [video], toolStatuses: [.ffmpeg: .missing])
+        XCTAssertFalse(actionsMissing.map(\.id).contains("video-to-mp4-h264"))
+
+        let actionsIncompatible = registry.actions(
+            for: [video],
+            toolStatuses: [.ffmpeg: .incompatibleArchitecture(url: URL(fileURLWithPath: "/usr/local/bin/ffmpeg"), architecture: .x86_64)]
+        )
+        XCTAssertFalse(actionsIncompatible.map(\.id).contains("video-to-mp4-h264"))
+    }
+
+    func testVideoActionsShownWithFFmpeg() {
+        let video = FileItem(
+            url: URL(fileURLWithPath: "/tmp/clip.mp4"),
+            type: FileType(kind: .video, identifier: "public.mpeg-4", localizedDescription: "MPEG-4")
+        )
+
+        let actions = registry.actions(
+            for: [video],
+            toolStatuses: [.ffmpeg: .available(url: URL(fileURLWithPath: "/opt/homebrew/bin/ffmpeg"), architecture: .arm64)]
+        )
+        XCTAssertTrue(actions.map(\.id).contains("video-to-mp4-h264"))
+    }
+
+    func testMixedSelectionFiltersCorrectly() {
+        let png = FileItem(
+            url: URL(fileURLWithPath: "/tmp/sample.png"),
+            type: FileType(kind: .image, identifier: "public.png", localizedDescription: "PNG")
+        )
+        let pdf = FileItem(
+            url: URL(fileURLWithPath: "/tmp/doc.pdf"),
+            type: FileType(kind: .pdf, identifier: "com.adobe.pdf", localizedDescription: "PDF")
+        )
+
+        let actions = registry.actions(for: [png, pdf], toolStatuses: [:])
+        let ids = Set(actions.map(\.id))
+
+        // Image-specific actions must NOT appear
+        XCTAssertFalse(ids.contains("png-to-jpeg"))
+        XCTAssertFalse(ids.contains("resize-50"))
+        XCTAssertFalse(ids.contains("images-to-pdf"))
+
+        // PDF-specific actions must NOT appear
+        XCTAssertFalse(ids.contains("merge-pdfs"))
+        XCTAssertFalse(ids.contains("split-pdf-pages"))
+
+        // Only universal file actions should survive
+        XCTAssertTrue(ids.contains("reveal-in-finder"))
+        XCTAssertTrue(ids.contains("copy-path"))
+        XCTAssertTrue(ids.contains("duplicate-file"))
+    }
+
+    func testFileActionsApplyToAllKinds() {
+        for kind in FileKind.allCases {
+            let item = FileItem(
+                url: URL(fileURLWithPath: "/tmp/item.\(kind.rawValue)"),
+                type: FileType(kind: kind, identifier: "test.\(kind.rawValue)", localizedDescription: "Test")
+            )
+            let actions = registry.actions(for: [item], toolStatuses: [:], ringMode: .fileActions)
+            let ids = Set(actions.map(\.id))
+            XCTAssertTrue(ids.contains("reveal-in-finder"), "Expected reveal-in-finder for \(kind)")
+            XCTAssertTrue(ids.contains("copy-path"), "Expected copy-path for \(kind)")
+            XCTAssertTrue(ids.contains("duplicate-file"), "Expected duplicate-file for \(kind)")
+        }
+    }
+}

@@ -6,7 +6,12 @@ import SwiftUI
 @Observable
 final class AppState {
     var items: [FileItem] = []
-    var settings = AppSettings()
+    var selectedItemIDs: Set<UUID> = []
+    var settings = AppSettings() {
+        didSet {
+            jobManager.maxConcurrentJobs = settings.maxConcurrentJobs
+        }
+    }
     var toolStatuses: [KnownTool: ToolStatus] = [:]
     var isActionPickerPresented = false
     var statusMessage = "Drop files onto the window, or drag from Finder and press Shift."
@@ -15,12 +20,26 @@ final class AppState {
     let tools = ToolAvailability()
     let dragMonitor: DragInteractionMonitor
     let floatingPanel = FloatingPanelController()
+    let registry = ActionRegistry()
+    let jobManager = JobManager()
 
     init() {
         let monitor = DragInteractionMonitor(settings: AppSettings())
         self.dragMonitor = monitor
         monitor.start()
         refreshTools()
+        jobManager.maxConcurrentJobs = settings.maxConcurrentJobs
+        jobManager.outputFolderProvider = { [weak self] in
+            self?.outputFolder ?? OutputManager.resolvedOutputFolder(from: AppSettings())
+        }
+    }
+
+    var selectedItems: [FileItem] {
+        items.filter { selectedItemIDs.contains($0.id) }
+    }
+
+    var outputFolder: URL {
+        OutputManager.resolvedOutputFolder(from: settings)
     }
 
     func refreshTools() {
@@ -32,7 +51,15 @@ final class AppState {
         for url in urls {
             let standardized = url.standardizedFileURL
             guard !items.contains(where: { $0.url == standardized }) else { continue }
-            appended.append(FileItem(url: standardized, type: detector.detect(url: standardized)))
+            let values = try? standardized.resourceValues(forKeys: [.fileSizeKey, .isDirectoryKey])
+            let fileSize = values?.fileSize.map { Int64($0) }
+            let isDir = values?.isDirectory ?? false
+            appended.append(FileItem(
+                url: standardized,
+                type: detector.detect(url: standardized),
+                fileSize: fileSize,
+                isDirectory: isDir
+            ))
         }
         items.append(contentsOf: appended)
         if !appended.isEmpty {
@@ -40,9 +67,28 @@ final class AppState {
         }
     }
 
+    func removeItems(withIDs ids: Set<UUID>) {
+        items.removeAll { ids.contains($0.id) }
+        selectedItemIDs.subtract(ids)
+        statusMessage = "Removed \(ids.count) file(s)."
+    }
+
     func clearSelection() {
         items.removeAll()
+        selectedItemIDs.removeAll()
         statusMessage = "Selection cleared."
+    }
+
+    func availableActions(ringMode: ActionRingMode? = nil) -> [ConversionAction] {
+        let targets = selectedItems.isEmpty ? items : selectedItems
+        return registry.actions(for: targets, toolStatuses: toolStatuses, ringMode: ringMode)
+    }
+
+    func runAction(_ action: ConversionAction) {
+        let targets = selectedItems.isEmpty ? items : selectedItems
+        guard !targets.isEmpty else { return }
+        _ = jobManager.enqueue(action: action, inputFiles: targets)
+        statusMessage = "Queued: \(action.title) on \(targets.count) file(s)"
     }
 
     func revealSnapshotFromDrag() {
@@ -61,19 +107,67 @@ final class AppState {
         isActionPickerPresented = true
     }
 
+    func closeRadialMenu() {
+        dragMonitor.cancelLatch()
+        floatingPanel.hide()
+    }
+
+    func openRadialMenuForSelection(mode: ActionRingMode = .conversion) {
+        let targets = selectedItems.isEmpty ? items : selectedItems
+        guard !targets.isEmpty else {
+            statusMessage = "Select or load files first to open Radial Menu."
+            return
+        }
+        let point = NSEvent.mouseLocation
+        floatingPanel.show(at: point, size: NSSize(width: 340, height: 340)) {
+            RadialMenuView(
+                mode: mode,
+                targets: targets,
+                onSelect: { [weak self] action in
+                    guard let self else { return }
+                    self.runAction(action)
+                    self.closeRadialMenu()
+                },
+                onDismiss: { [weak self] in
+                    self?.closeRadialMenu()
+                }
+            )
+            .environment(self)
+        }
+    }
+
     func updateFloatingPanel() {
-        guard settings.followPointerWithFloatingPanel, dragMonitor.latchedMode != nil else {
+        guard settings.followPointerWithFloatingPanel, let mode = dragMonitor.latchedMode else {
             floatingPanel.hide()
             return
         }
-        let mode = dragMonitor.latchedMode
-        let count = dragMonitor.hasFileURLType
-        floatingPanel.show(at: dragMonitor.pointer) {
-            FloatingRingStubView(
+
+        dragMonitor.snapshotFileURLsIfNeeded()
+        let urls = dragMonitor.snapshotURLs
+        let targets: [FileItem]
+        if !urls.isEmpty {
+            targets = urls.map { FileItem(url: $0, type: self.detector.detect(url: $0)) }
+        } else {
+            targets = selectedItems.isEmpty ? items : selectedItems
+        }
+
+        floatingPanel.show(at: dragMonitor.pointer, size: NSSize(width: 340, height: 340)) {
+            RadialMenuView(
                 mode: mode,
-                fileTypePresent: count,
-                fileCountHint: self.dragMonitor.snapshotURLs.count
+                targets: targets,
+                onSelect: { [weak self] action in
+                    guard let self else { return }
+                    if !urls.isEmpty {
+                        self.addDroppedURLs(urls)
+                    }
+                    self.runAction(action)
+                    self.closeRadialMenu()
+                },
+                onDismiss: { [weak self] in
+                    self?.closeRadialMenu()
+                }
             )
+            .environment(self)
         }
     }
 }

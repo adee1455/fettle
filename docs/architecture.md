@@ -23,6 +23,11 @@ QuickKit is a native macOS app (Swift 6, SwiftUI + AppKit). Processing services 
 - Never overwrite without confirmation; never delete originals after conversion.
 - No cloud uploads, accounts, telemetry, or bundled third-party executables in this phase.
 
-## Milestone 1 status
+## Milestone status
 
-The drop zone, type detector, tool scanner, drag monitor, floating stub panel, and HUD are in place. Conversion workers, job queue, and the real radial menu are not.
+- **Milestone 1:** Drop zone, type detector, tool scanner, drag monitor, floating stub panel, and HUD.
+- **Milestone 2:** Main window product UI, sidebar navigation, multi-selection file list, ActionRegistry with tool and type filtering, JobManager queue lifecycle, OutputManager folder resolution, and Settings.
+- **Milestone 3:** Image engine (`ImageService`, `ProcessRunner`), native Image I/O conversions (PNG ↔ JPEG, HEIC → JPEG), WebP encoding via `cwebp`, alpha flattening, scaling, metadata stripping, atomic writes, and real pipeline execution.
+- **Milestone 5:** Native PDF engine (`PDFService`), multi-page merge, image-to-PDF conversion, page extraction/splitting, encrypted/corrupt document validation, and JobManager execution.
+- **Milestone 6:** Interactive floating radial menu (`RadialMenuView`), glassmorphic circular geometry, live modifier mode flipping, center hub previews, shortcut triggers (⌘R), and direct job execution.
+- **Milestone 4 & 7+:** Media (FFmpeg), polish, and release.

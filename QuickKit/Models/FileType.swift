@@ -1,7 +1,7 @@
 import Foundation
 import UniformTypeIdentifiers
 
-enum FileKind: String, Equatable, Sendable, CaseIterable {
+enum FileKind: String, Equatable, Hashable, Sendable, CaseIterable {
     case image
     case audio
     case video
@@ -9,7 +9,7 @@ enum FileKind: String, Equatable, Sendable, CaseIterable {
     case other
 }
 
-struct FileType: Equatable, Sendable {
+struct FileType: Equatable, Hashable, Sendable {
     var kind: FileKind
     var identifier: String
     var localizedDescription: String

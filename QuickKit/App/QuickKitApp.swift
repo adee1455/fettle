@@ -13,6 +13,10 @@ struct QuickKitApp: App {
         .defaultSize(width: 880, height: 640)
         .commands {
             CommandGroup(after: .newItem) {
+                Button("Open Radial Menu") {
+                    appState.openRadialMenuForSelection()
+                }
+                .keyboardShortcut("r", modifiers: [.command])
                 Button("Open Action Picker") {
                     appState.openActionPicker()
                 }
@@ -24,7 +28,7 @@ struct QuickKitApp: App {
         }
 
         Settings {
-            SettingsPlaceholderView()
+            SettingsView()
                 .environment(appState)
         }
     }

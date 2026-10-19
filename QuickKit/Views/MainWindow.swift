@@ -2,44 +2,72 @@ import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
 
+enum NavigationSection: String, Hashable, CaseIterable {
+    case files
+    case jobs
+    case tools
+
+    var title: String {
+        switch self {
+        case .files: "Files"
+        case .jobs: "Jobs"
+        case .tools: "Tools"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .files: "doc.on.doc"
+        case .jobs: "gearshape.arrow.triangle.2.circlepath"
+        case .tools: "wrench.and.screwdriver"
+        }
+    }
+}
+
 struct MainWindow: View {
     @Environment(AppState.self) private var appState
+    @State private var selectedSection: NavigationSection = .files
     @State private var dropTargeted = false
 
     var body: some View {
         NavigationSplitView {
-            List {
-                Section("Tools") {
-                    toolRow(.ffmpeg)
-                    toolRow(.ffprobe)
-                    toolRow(.magick)
-                    toolRow(.qpdf)
-                }
-            }
-            .navigationSplitViewColumnWidth(min: 220, ideal: 260)
+            sidebar
         } detail: {
-            VStack(alignment: .leading, spacing: 16) {
-                DropZoneView(isTargeted: dropTargeted, fileCount: appState.items.count)
-                    .onDrop(of: [.fileURL], isTargeted: $dropTargeted, perform: handleDrop)
-
-                if appState.settings.showDragSpikeHUD {
-                    DragSpikeHUD()
-                }
-
-                fileList
-                Text(appState.statusMessage)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-            }
-            .padding(20)
+            detailContent
         }
         .navigationTitle("QuickKit")
         .toolbar {
-            ToolbarItemGroup {
-                Button("Action Picker") { appState.openActionPicker() }
-                Button("Clear") { appState.clearSelection() }
-                    .disabled(appState.items.isEmpty)
-                Button("Refresh tools") { appState.refreshTools() }
+            ToolbarItemGroup(placement: .primaryAction) {
+                Button {
+                    appState.openRadialMenuForSelection()
+                } label: {
+                    Label("Radial Menu", systemImage: "circle.grid.cross")
+                }
+                .disabled(appState.items.isEmpty)
+                .keyboardShortcut("r", modifiers: [.command])
+                .help("Open Radial Menu (⌘R)")
+
+                Button {
+                    appState.openActionPicker()
+                } label: {
+                    Label("Action Picker", systemImage: "sparkles")
+                }
+                .help("Open Action Picker (Return)")
+
+                Button {
+                    appState.clearSelection()
+                } label: {
+                    Label("Clear", systemImage: "trash")
+                }
+                .disabled(appState.items.isEmpty)
+                .help("Clear all loaded files")
+
+                Button {
+                    appState.refreshTools()
+                } label: {
+                    Label("Refresh Tools", systemImage: "arrow.clockwise")
+                }
+                .help("Rescan installed tools")
             }
         }
         .sheet(isPresented: Binding(
@@ -63,55 +91,133 @@ struct MainWindow: View {
         }
     }
 
-    private var fileList: some View {
-        Group {
-            if appState.items.isEmpty {
-                ContentUnavailableView(
-                    "No files yet",
-                    systemImage: "tray",
-                    description: Text("Drop files from Finder, or use a drag plus Shift if tracking is working.")
-                )
-                .frame(maxWidth: .infinity, minHeight: 160)
-            } else {
-                List(appState.items) { item in
-                    HStack(spacing: 12) {
-                        Image(nsImage: NSWorkspace.shared.icon(forFile: item.url.path))
-                            .resizable()
-                            .frame(width: 32, height: 32)
-                        VStack(alignment: .leading) {
-                            Text(item.displayName)
-                            Text("\(item.type.kind.rawValue) · \(item.type.localizedDescription) · \(item.type.identifier)")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                                .lineLimit(1)
-                        }
-                    }
+    // MARK: - Sidebar
+
+    private var sidebar: some View {
+        List(NavigationSection.allCases, id: \.self, selection: $selectedSection) { section in
+            NavigationLink(value: section) {
+                HStack {
+                    Label(section.title, systemImage: section.systemImage)
+                    Spacer()
+                    badge(for: section)
                 }
-                .frame(minHeight: 180)
+            }
+        }
+        .listStyle(.sidebar)
+        .navigationSplitViewColumnWidth(min: 180, ideal: 200, max: 260)
+    }
+
+    @ViewBuilder
+    private func badge(for section: NavigationSection) -> some View {
+        switch section {
+        case .files:
+            if !appState.items.isEmpty {
+                Text("\(appState.items.count)")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.secondary)
+            }
+        case .jobs:
+            let active = appState.jobManager.jobs.filter { $0.status == .running || $0.status == .queued }.count
+            if active > 0 {
+                Text("\(active)")
+                    .font(.caption2.weight(.bold))
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 1)
+                    .background(Color.accentColor)
+                    .foregroundStyle(.white)
+                    .clipShape(Capsule())
+            }
+        case .tools:
+            let unavailable = appState.toolStatuses.values.filter { !$0.isUsable }.count
+            if unavailable > 0 {
+                Text("\(unavailable)")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.orange)
             }
         }
     }
 
-    private func toolRow(_ tool: KnownTool) -> some View {
-        let status = appState.toolStatuses[tool] ?? .missing
-        return VStack(alignment: .leading, spacing: 2) {
-            HStack {
-                Text(tool.executableName)
-                Spacer()
-                Text(status.isUsable ? "OK" : "Unavailable")
-                    .foregroundStyle(status.isUsable ? .green : .orange)
-                    .font(.caption.weight(.semibold))
+    // MARK: - Detail Content
+
+    @ViewBuilder
+    private var detailContent: some View {
+        VStack(spacing: 0) {
+            Group {
+                switch selectedSection {
+                case .files:
+                    filesView
+                case .jobs:
+                    JobQueueView()
+                case .tools:
+                    ToolStatusView()
+                }
             }
-            Text(status.summary)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-            if !status.isUsable {
-                Text(tool.installHint)
-                    .font(.caption2.monospaced())
-            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            Divider()
+
+            statusBar
         }
-        .padding(.vertical, 4)
+        .onDrop(of: [.fileURL], isTargeted: $dropTargeted, perform: handleDrop)
     }
+
+    private var filesView: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            DropZoneView(isTargeted: dropTargeted, fileCount: appState.items.count)
+
+            if appState.settings.showDragSpikeHUD {
+                DragSpikeHUD()
+            }
+
+            FileListView()
+        }
+        .padding(16)
+    }
+
+    // MARK: - Status Bar
+
+    private var statusBar: some View {
+        HStack(spacing: 12) {
+            Text(appState.statusMessage)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+
+            Spacer()
+
+            let runningJobs = appState.jobManager.jobs.filter { $0.status == .running }.count
+            if runningJobs > 0 {
+                HStack(spacing: 6) {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text("\(runningJobs) running")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Button {
+                let folder = appState.outputFolder
+                try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+                NSWorkspace.shared.open(folder)
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "folder")
+                        .font(.caption2)
+                    Text(appState.outputFolder.lastPathComponent)
+                        .font(.caption2)
+                }
+                .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+            .help("Open output folder in Finder")
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .background(Color(nsColor: .windowBackgroundColor))
+    }
+
+    // MARK: - Drop Handling
 
     private func handleDrop(_ providers: [NSItemProvider]) -> Bool {
         var loaded = false

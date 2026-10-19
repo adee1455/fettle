@@ -41,7 +41,7 @@ final class FloatingPanelController {
     func position(at point: NSPoint, size: NSSize) {
         guard let panel, let screen = screen(for: point) else { return }
         let visible = screen.visibleFrame
-        var origin = NSPoint(x: point.x + 16, y: point.y - size.height - 16)
+        var origin = NSPoint(x: point.x - size.width / 2, y: point.y - size.height / 2)
         origin.x = min(max(origin.x, visible.minX + 8), visible.maxX - size.width - 8)
         origin.y = min(max(origin.y, visible.minY + 8), visible.maxY - size.height - 8)
         panel.setFrameOrigin(origin)

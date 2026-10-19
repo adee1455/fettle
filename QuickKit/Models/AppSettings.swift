@@ -13,4 +13,6 @@ struct AppSettings: Codable, Equatable, Sendable {
     var fileActionModifier: ModifierChoice = .control
     var showDragSpikeHUD: Bool = true
     var followPointerWithFloatingPanel: Bool = true
+    var outputFolderBookmark: Data? = nil
+    var maxConcurrentJobs: Int = 4
 }
