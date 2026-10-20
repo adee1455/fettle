@@ -2,8 +2,8 @@ import AppKit
 import CoreGraphics
 import Foundation
 
-/// Public-API Finder-drag detector: drag pasteboard + global mouse & modifier monitors.
-/// Does not require Accessibility permissions or private APIs.
+/// Finder drag & selection detector: monitors drag pasteboard, global modifiers, and Finder selection.
+/// Zero Accessibility or Input Monitoring permissions required.
 @MainActor
 @Observable
 final class DragInteractionMonitor {
@@ -21,20 +21,25 @@ final class DragInteractionMonitor {
     var onEscape: () -> Void
 
     private var lastSeenChangeCount: Int
+    private var pasteboardChangeCountBeforeMouseDown: Int
+    private var wasPrimaryButtonDown = false
+    private var wasEscapeDown = false
+
     private var dragMonitor: Any?
     private var upMonitor: Any?
     private var globalFlagsMonitor: Any?
     private var localFlagsMonitor: Any?
     private var localKeyMonitor: Any?
     private var modifierPoll: Timer?
-    private var wasEscapeDown = false
     private let pasteboard = NSPasteboard(name: .drag)
 
     init(settings: AppSettings = AppSettings(), onEscape: @escaping () -> Void = {}) {
         self.settings = settings
         self.onEscape = onEscape
-        self.lastSeenChangeCount = NSPasteboard(name: .drag).changeCount
-        self.pasteboardChangeCount = lastSeenChangeCount
+        let initialChangeCount = NSPasteboard(name: .drag).changeCount
+        self.lastSeenChangeCount = initialChangeCount
+        self.pasteboardChangeCountBeforeMouseDown = initialChangeCount
+        self.pasteboardChangeCount = initialChangeCount
         self.pointer = NSEvent.mouseLocation
         self.modifiers = NSEvent.modifierFlags
     }
@@ -56,7 +61,7 @@ final class DragInteractionMonitor {
             }
         }
 
-        // 3. Global modifier flags (detect Shift pressed during drag from Finder/Desktop)
+        // 3. Global modifier flags (detect Shift pressed in Finder or Desktop)
         globalFlagsMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.flagsChanged]) { [weak self] _ in
             Task { @MainActor in
                 self?.refreshModifiers()
@@ -71,7 +76,7 @@ final class DragInteractionMonitor {
             return event
         }
 
-        // 5. Local Escape key monitor (when app has key window)
+        // 5. Local Escape key monitor
         localKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown]) { [weak self] event in
             if event.keyCode == 53 {
                 Task { @MainActor in
@@ -83,8 +88,8 @@ final class DragInteractionMonitor {
             return event
         }
 
-        // 6. High-responsiveness polling timer (Tangerine-style dual monitor)
-        // Checks global Escape key state (keycode 53) and mouse dragging state
+        // 6. High-responsiveness polling timer (30ms interval)
+        // Detects global Escape key (virtual keycode 53), mouse transitions, and fresh drag sessions
         modifierPoll = Timer.scheduledTimer(withTimeInterval: 0.03, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.pollState()
@@ -118,9 +123,13 @@ final class DragInteractionMonitor {
     }
 
     func snapshotFileURLsIfNeeded() {
-        let urls = Self.readFileURLs(from: pasteboard)
-        if !urls.isEmpty {
-            snapshotURLs = urls
+        // Only read if currently dragging and a new drag change occurred
+        let currentChangeCount = pasteboard.changeCount
+        if isLikelyFileDrag && currentChangeCount != pasteboardChangeCountBeforeMouseDown {
+            let urls = Self.readFileURLs(from: pasteboard)
+            if !urls.isEmpty {
+                snapshotURLs = urls
+            }
         }
     }
 
@@ -141,9 +150,40 @@ final class DragInteractionMonitor {
         return []
     }
 
+    /// Fetches the currently selected file URLs in Finder or Desktop via AppleScript
+    static func getFinderSelectedURLs() -> [URL] {
+        let script = """
+        tell application "Finder"
+            set sel to selection as alias list
+            set outPaths to {}
+            repeat with itemRef in sel
+                set end of outPaths to POSIX path of itemRef
+            end repeat
+            return outPaths
+        end tell
+        """
+        var error: NSDictionary?
+        guard let appleScript = NSAppleScript(source: script) else { return [] }
+        let result = appleScript.executeAndReturnError(&error)
+        guard error == nil else { return [] }
+
+        var urls: [URL] = []
+        let count = result.numberOfItems
+        if count > 0 {
+            for i in 1...count {
+                if let path = result.atIndex(i)?.stringValue {
+                    urls.append(URL(fileURLWithPath: path).standardizedFileURL)
+                }
+            }
+        } else if let singlePath = result.stringValue {
+            urls.append(URL(fileURLWithPath: singlePath).standardizedFileURL)
+        }
+        return urls
+    }
+
     private func pollState() {
         // 1. Global Escape key detection via CGEventSource (virtual keycode 53 = Escape)
-        // Operates even when Finder/Desktop is the active application
+        // Works anywhere on macOS without requiring application activation
         let isEscapeDown = CGEventSource.keyState(.combinedSessionState, key: 53)
         if isEscapeDown && !wasEscapeDown {
             wasEscapeDown = true
@@ -155,14 +195,23 @@ final class DragInteractionMonitor {
         }
         wasEscapeDown = isEscapeDown
 
-        // 2. Mouse dragging state
+        // 2. Mouse button transitions
         let isMouseDown = (NSEvent.pressedMouseButtons & 1) != 0
+        if isMouseDown && !wasPrimaryButtonDown {
+            // Mouse pressed down: snapshot baseline change count
+            wasPrimaryButtonDown = true
+            pasteboardChangeCountBeforeMouseDown = pasteboard.changeCount
+        } else if !isMouseDown && wasPrimaryButtonDown {
+            // Mouse released: end drag
+            wasPrimaryButtonDown = false
+            handleMouseUp()
+        }
+
+        // 3. While mouse is dragging, track movement & pasteboard updates
         if isMouseDown {
             pointer = NSEvent.mouseLocation
             refreshPasteboard(isDragging: true)
             refreshModifiers()
-        } else if isLeftMouseDragging {
-            handleMouseUp()
         }
     }
 
@@ -185,20 +234,15 @@ final class DragInteractionMonitor {
         pasteboardChangeCount = changeCount
         hasFileURLType = Self.pasteboardHasFileURLType(pasteboard)
 
-        if isDragging && hasFileURLType {
-            if changeCount != lastSeenChangeCount {
-                lastSeenChangeCount = changeCount
-                let freshURLs = Self.readFileURLs(from: pasteboard)
-                if !freshURLs.isEmpty {
-                    snapshotURLs = freshURLs
-                }
-            } else if snapshotURLs.isEmpty {
-                let freshURLs = Self.readFileURLs(from: pasteboard)
-                if !freshURLs.isEmpty {
-                    snapshotURLs = freshURLs
-                }
+        // Stale pasteboard rejection: ONLY accept drag items if Finder updated
+        // the pasteboard AFTER the primary button was pressed down
+        if isDragging && hasFileURLType && changeCount != pasteboardChangeCountBeforeMouseDown {
+            lastSeenChangeCount = changeCount
+            let freshURLs = Self.readFileURLs(from: pasteboard)
+            if !freshURLs.isEmpty {
+                snapshotURLs = freshURLs
+                isLikelyFileDrag = true
             }
-            isLikelyFileDrag = !snapshotURLs.isEmpty
         }
 
         if !isDragging {
@@ -209,11 +253,29 @@ final class DragInteractionMonitor {
     private func refreshModifiers() {
         modifiers = NSEvent.modifierFlags
         pointer = NSEvent.mouseLocation
-        guard isLikelyFileDrag || latchedMode != nil else { return }
 
-        if let mapped = mode(for: modifiers) {
+        guard let mapped = mode(for: modifiers) else {
+            // Modifier released: if not currently in a mouse drag session, dismiss radial
+            if latchedMode != nil && !isLeftMouseDragging {
+                cancelLatch()
+                onEscape()
+            }
+            return
+        }
+
+        if isLikelyFileDrag && !snapshotURLs.isEmpty {
+            // Active file drag session with fresh URLs
             latchedMode = mapped
-            snapshotFileURLsIfNeeded()
+        } else {
+            // Mouse is not dragging: check if Finder/Desktop has files currently selected
+            let frontAppId = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
+            if frontAppId == "com.apple.finder" {
+                let selected = Self.getFinderSelectedURLs()
+                if !selected.isEmpty {
+                    snapshotURLs = selected
+                    latchedMode = mapped
+                }
+            }
         }
     }
 

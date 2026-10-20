@@ -120,10 +120,20 @@ final class JobManager {
         ["reveal-in-finder", "copy-path", "duplicate-file"].contains(actionId)
     }
 
+    // MARK: - Output Directory Resolution
+
+    private func resolvedDestinationDirectory(for sourceURL: URL) -> URL {
+        let parentDir = sourceURL.deletingLastPathComponent()
+        // Save directly in the same folder where the file lives if writable; fallback to outputFolderProvider
+        if FileManager.default.isWritableFile(atPath: parentDir.path) {
+            return parentDir
+        }
+        return outputFolderProvider()
+    }
+
     // MARK: - Image Engine Execution
 
     private func executeImageJob(job: Job) async {
-        let outputDirectory = outputFolderProvider()
         let options = ImageConversionOptions.forAction(job.action.id)
         let total = job.inputFiles.count
         var generatedURLs: [URL] = []
@@ -150,6 +160,7 @@ final class JobManager {
                 targetExt = fileItem.url.pathExtension.isEmpty ? "png" : fileItem.url.pathExtension
             }
 
+            let outputDirectory = resolvedDestinationDirectory(for: fileItem.url)
             let destinationURL = OutputManager.destinationURL(
                 for: fileItem.url,
                 targetExtension: targetExt,
@@ -190,7 +201,6 @@ final class JobManager {
     // MARK: - PDF Engine Execution
 
     private func executePDFJob(job: Job) async {
-        let outputDirectory = outputFolderProvider()
         job.progress = 0.2
 
         do {
@@ -199,6 +209,7 @@ final class JobManager {
                 guard !job.inputFiles.isEmpty else { return }
                 job.statusMessage = "Merging \(job.inputFiles.count) PDF files…"
                 let firstURL = job.inputFiles[0].url
+                let outputDirectory = resolvedDestinationDirectory(for: firstURL)
                 let baseName = "\(firstURL.deletingPathExtension().lastPathComponent) (Merged)"
                 let destinationURL = OutputManager.nonCollidingURL(
                     for: baseName,
@@ -213,9 +224,9 @@ final class JobManager {
             case "images-to-pdf":
                 guard !job.inputFiles.isEmpty else { return }
                 job.statusMessage = "Creating PDF from \(job.inputFiles.count) image(s)…"
-                let baseName = job.inputFiles.count == 1
-                    ? job.inputFiles[0].url.deletingPathExtension().lastPathComponent
-                    : "Combined Images"
+                let firstURL = job.inputFiles[0].url
+                let outputDirectory = resolvedDestinationDirectory(for: firstURL)
+                let baseName = firstURL.deletingPathExtension().lastPathComponent
                 let destinationURL = OutputManager.nonCollidingURL(
                     for: baseName,
                     extension: "pdf",
@@ -228,6 +239,7 @@ final class JobManager {
 
             case "split-pdf-pages":
                 guard let firstFile = job.inputFiles.first else { return }
+                let outputDirectory = resolvedDestinationDirectory(for: firstFile.url)
                 job.statusMessage = "Splitting \(firstFile.displayName)…"
                 let generatedURLs = try pdfService.splitPages(
                     sourceURL: firstFile.url,
@@ -261,7 +273,6 @@ final class JobManager {
     // MARK: - Media Engine Execution
 
     private func executeMediaJob(job: Job) async {
-        let outputDirectory = outputFolderProvider()
         let total = job.inputFiles.count
         var generatedURLs: [URL] = []
 
@@ -291,6 +302,7 @@ final class JobManager {
                 targetExt = "mp4"
             }
 
+            let outputDirectory = resolvedDestinationDirectory(for: fileItem.url)
             let destinationURL = OutputManager.destinationURL(
                 for: fileItem.url,
                 targetExtension: targetExt,
@@ -348,7 +360,6 @@ final class JobManager {
     // MARK: - Document Actions Execution
 
     private func executeDocumentJob(job: Job) async {
-        let outDir = outputFolderProvider()
         var outputs: [URL] = []
         let total = Double(job.inputFiles.count)
 
@@ -361,6 +372,7 @@ final class JobManager {
             }
 
             job.statusMessage = "Converting \(file.displayName) (\(index + 1)/\(Int(total)))…"
+            let outDir = resolvedDestinationDirectory(for: file.url)
             let baseName = file.url.deletingPathExtension().lastPathComponent
             let dest = OutputManager.nonCollidingURL(for: baseName, extension: "pdf", in: outDir)
 
@@ -410,7 +422,7 @@ final class JobManager {
         case "duplicate-file":
             var duplicates: [URL] = []
             for file in job.inputFiles {
-                let dir = file.url.deletingLastPathComponent()
+                let dir = resolvedDestinationDirectory(for: file.url)
                 let dest = OutputManager.nonCollidingURL(
                     for: "\(file.url.deletingPathExtension().lastPathComponent) copy",
                     extension: file.url.pathExtension,
