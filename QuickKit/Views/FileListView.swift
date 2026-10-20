@@ -127,6 +127,7 @@ struct FileListView: View {
         case .video: .purple
         case .audio: .orange
         case .pdf: .red
+        case .document: .indigo
         case .other: .gray
         }
     }

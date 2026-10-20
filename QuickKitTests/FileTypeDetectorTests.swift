@@ -51,6 +51,20 @@ final class FileTypeDetectorTests: XCTestCase {
         XCTAssertEqual(type.kind, .video)
     }
 
+    func testPPTXIsDocument() throws {
+        let url = scratch.appendingPathComponent("deck.pptx")
+        try Data("PK0304".utf8).write(to: url)
+        let type = detector.detect(url: url)
+        XCTAssertEqual(type.kind, .document)
+    }
+
+    func testDOCXIsDocument() throws {
+        let url = scratch.appendingPathComponent("doc.docx")
+        try Data("PK0304".utf8).write(to: url)
+        let type = detector.detect(url: url)
+        XCTAssertEqual(type.kind, .document)
+    }
+
     func testClassifyUsesUTType() {
         let png = detector.classify(utType: .png, fallbackUTI: nil)
         XCTAssertEqual(png.kind, .image)

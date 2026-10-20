@@ -13,15 +13,18 @@ final class JobManager {
     let imageService: ImageService
     let pdfService: PDFService
     let mediaService: MediaService
+    let documentService: DocumentService
 
     init(
         imageService: ImageService = ImageService(),
         pdfService: PDFService = PDFService(),
-        mediaService: MediaService = MediaService()
+        mediaService: MediaService = MediaService(),
+        documentService: DocumentService = DocumentService()
     ) {
         self.imageService = imageService
         self.pdfService = pdfService
         self.mediaService = mediaService
+        self.documentService = documentService
     }
 
     func enqueue(action: ConversionAction, inputFiles: [FileItem]) -> Job {
@@ -70,6 +73,8 @@ final class JobManager {
                 await executePDFJob(job: job)
             } else if isMediaAction(job.action.id) {
                 await executeMediaJob(job: job)
+            } else if isDocumentAction(job.action.id) {
+                await executeDocumentJob(job: job)
             } else if isFileAction(job.action.id) {
                 await executeFileActionJob(job: job)
             } else {
@@ -93,6 +98,10 @@ final class JobManager {
 
     private func isPDFAction(_ actionId: String) -> Bool {
         ["merge-pdfs", "images-to-pdf", "split-pdf-pages"].contains(actionId)
+    }
+
+    private func isDocumentAction(_ actionId: String) -> Bool {
+        ["document-to-pdf"].contains(actionId)
     }
 
     private func isMediaAction(_ actionId: String) -> Bool {
@@ -332,6 +341,51 @@ final class JobManager {
         job.status = .completed
         job.progress = 1.0
         job.statusMessage = "Completed (\(generatedURLs.count) file\(generatedURLs.count == 1 ? "" : "s"))"
+        job.completedAt = Date()
+        drainQueue()
+    }
+
+    // MARK: - Document Actions Execution
+
+    private func executeDocumentJob(job: Job) async {
+        let outDir = outputFolderProvider()
+        var outputs: [URL] = []
+        let total = Double(job.inputFiles.count)
+
+        for (index, file) in job.inputFiles.enumerated() {
+            guard !Task.isCancelled else {
+                job.status = .cancelled
+                job.statusMessage = "Cancelled"
+                drainQueue()
+                return
+            }
+
+            job.statusMessage = "Converting \(file.displayName) (\(index + 1)/\(Int(total)))…"
+            let baseName = file.url.deletingPathExtension().lastPathComponent
+            let dest = OutputManager.nonCollidingURL(for: baseName, extension: "pdf", in: outDir)
+
+            do {
+                try await documentService.convertToPDF(
+                    sourceURL: file.url,
+                    destinationURL: dest
+                )
+                outputs.append(dest)
+                let overall = Double(index + 1) / total
+                job.progress = overall
+                job.statusMessage = "\(file.displayName) → PDF"
+            } catch {
+                job.status = .failed
+                job.errorMessage = error.localizedDescription
+                job.completedAt = Date()
+                drainQueue()
+                return
+            }
+        }
+
+        job.outputURLs = outputs
+        job.status = .completed
+        job.progress = 1.0
+        job.statusMessage = "Converted \(outputs.count) document(s) to PDF"
         job.completedAt = Date()
         drainQueue()
     }

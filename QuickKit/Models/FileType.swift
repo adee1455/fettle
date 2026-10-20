@@ -6,6 +6,7 @@ enum FileKind: String, Equatable, Hashable, Sendable, CaseIterable {
     case audio
     case video
     case pdf
+    case document
     case other
 }
 

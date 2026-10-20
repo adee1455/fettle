@@ -1,8 +1,8 @@
 import AppKit
 import Foundation
 
-/// Public-API Finder-drag detector: drag pasteboard + global mouse monitors.
-/// Does not use Accessibility, Input Monitoring, event taps, or private dragging sessions.
+/// Public-API Finder-drag detector: drag pasteboard + global mouse & modifier monitors.
+/// Does not require Accessibility permissions or private APIs.
 @MainActor
 @Observable
 final class DragInteractionMonitor {
@@ -21,6 +21,7 @@ final class DragInteractionMonitor {
     private var lastSeenChangeCount: Int
     private var dragMonitor: Any?
     private var upMonitor: Any?
+    private var globalFlagsMonitor: Any?
     private var localFlagsMonitor: Any?
     private var localKeyMonitor: Any?
     private var modifierPoll: Timer?
@@ -38,22 +39,37 @@ final class DragInteractionMonitor {
 
     func start() {
         stop()
+
+        // 1. Mouse Dragged
         dragMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDragged]) { [weak self] _ in
             Task { @MainActor in
                 self?.handleMouseDragged()
             }
         }
+
+        // 2. Mouse Up
         upMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseUp]) { [weak self] _ in
             Task { @MainActor in
                 self?.handleMouseUp()
             }
         }
+
+        // 3. Global modifier flags (detect Shift pressed during drag from Finder/Desktop)
+        globalFlagsMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.flagsChanged]) { [weak self] _ in
+            Task { @MainActor in
+                self?.refreshModifiers()
+            }
+        }
+
+        // 4. Local modifier flags
         localFlagsMonitor = NSEvent.addLocalMonitorForEvents(matching: [.flagsChanged]) { [weak self] event in
             Task { @MainActor in
                 self?.refreshModifiers()
             }
             return event
         }
+
+        // 5. Escape key dismissal
         localKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown]) { [weak self] event in
             if event.keyCode == 53 {
                 Task { @MainActor in
@@ -64,23 +80,30 @@ final class DragInteractionMonitor {
             }
             return event
         }
-        modifierPoll = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
+
+        // 6. High-responsiveness polling timer (Tangerine-style dual monitor)
+        modifierPoll = Timer.scheduledTimer(withTimeInterval: 0.03, repeats: true) { [weak self] _ in
             Task { @MainActor in
-                self?.refreshModifiers()
+                self?.pollState()
             }
         }
+
         lastEventDescription = "Monitors installed"
     }
 
     func stop() {
         if let dragMonitor { NSEvent.removeMonitor(dragMonitor) }
         if let upMonitor { NSEvent.removeMonitor(upMonitor) }
+        if let globalFlagsMonitor { NSEvent.removeMonitor(globalFlagsMonitor) }
         if let localFlagsMonitor { NSEvent.removeMonitor(localFlagsMonitor) }
         if let localKeyMonitor { NSEvent.removeMonitor(localKeyMonitor) }
+
         dragMonitor = nil
         upMonitor = nil
+        globalFlagsMonitor = nil
         localFlagsMonitor = nil
         localKeyMonitor = nil
+
         modifierPoll?.invalidate()
         modifierPoll = nil
     }
@@ -112,6 +135,17 @@ final class DragInteractionMonitor {
         return []
     }
 
+    private func pollState() {
+        let isMouseDown = (NSEvent.pressedMouseButtons & 1) != 0
+        if isMouseDown {
+            pointer = NSEvent.mouseLocation
+            refreshPasteboard(isDragging: true)
+            refreshModifiers()
+        } else if isLeftMouseDragging {
+            handleMouseUp()
+        }
+    }
+
     private func handleMouseDragged() {
         isLeftMouseDragging = true
         pointer = NSEvent.mouseLocation
@@ -124,21 +158,22 @@ final class DragInteractionMonitor {
         isLeftMouseDragging = false
         isLikelyFileDrag = false
         lastEventDescription = "leftMouseUp"
-        // Keep latchedMode so the user can confirm from the HUD after the Finder drag ends.
+        // Keep latchedMode so the user can interact/confirm from HUD or click to select
     }
 
     private func refreshPasteboard(isDragging: Bool) {
         let changeCount = pasteboard.changeCount
         pasteboardChangeCount = changeCount
         hasFileURLType = Self.pasteboardHasFileURLType(pasteboard)
-        if isDragging, changeCount != lastSeenChangeCount, hasFileURLType {
+
+        if isDragging && changeCount != lastSeenChangeCount && hasFileURLType {
             lastSeenChangeCount = changeCount
             isLikelyFileDrag = true
             snapshotURLs = []
-        } else if isDragging, hasFileURLType, changeCount == lastSeenChangeCount {
-            // Finder often updates the pasteboard a few milliseconds after the first dragged event.
+        } else if isDragging && hasFileURLType && changeCount == lastSeenChangeCount {
             isLikelyFileDrag = true
         }
+
         if !isDragging {
             isLikelyFileDrag = false
         }
@@ -151,6 +186,9 @@ final class DragInteractionMonitor {
 
         if let mapped = mode(for: modifiers) {
             latchedMode = mapped
+            if snapshotURLs.isEmpty {
+                snapshotFileURLsIfNeeded()
+            }
         }
     }
 

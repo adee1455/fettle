@@ -5,7 +5,7 @@ final class ActionRegistryTests: XCTestCase {
     private let registry = ActionRegistry()
 
     func testFileKindCasesExistForRegistry() {
-        XCTAssertEqual(FileKind.allCases.count, 5)
+        XCTAssertEqual(FileKind.allCases.count, 6)
         XCTAssertEqual(ActionRingMode.allCases.map(\.rawValue), ["conversion", "editing", "fileActions"])
     }
 
@@ -24,14 +24,40 @@ final class ActionRegistryTests: XCTestCase {
         XCTAssertFalse(actions.isEmpty)
         let ids = actions.map(\.id)
         XCTAssertTrue(ids.contains("png-to-jpeg"))
-        XCTAssertTrue(ids.contains("jpeg-to-png"))
         XCTAssertTrue(ids.contains("image-to-webp"))
+        XCTAssertTrue(ids.contains("images-to-pdf"))
         XCTAssertTrue(ids.contains("resize-50"))
         XCTAssertTrue(ids.contains("reveal-in-finder"))
+
+        // Smart relatable filtering: JPEG -> PNG must NOT be suggested for a PNG file!
+        XCTAssertFalse(ids.contains("jpeg-to-png"))
 
         // Video and PDF actions must NOT appear
         XCTAssertFalse(ids.contains("video-to-mp4-h264"))
         XCTAssertFalse(ids.contains("merge-pdfs"))
+
+        // Priority ordering: WebP first, then JPEG, then PDF
+        let webpIndex = ids.firstIndex(of: "image-to-webp")!
+        let jpegIndex = ids.firstIndex(of: "png-to-jpeg")!
+        let pdfIndex = ids.firstIndex(of: "images-to-pdf")!
+        XCTAssertLessThan(webpIndex, jpegIndex)
+        XCTAssertLessThan(jpegIndex, pdfIndex)
+    }
+
+    func testDocumentActionsForPPTX() {
+        let pptx = FileItem(
+            url: URL(fileURLWithPath: "/tmp/slides.pptx"),
+            type: FileType(kind: .document, identifier: "org.openxmlformats.presentationml.presentation", localizedDescription: "Presentation")
+        )
+        let actions = registry.actions(for: [pptx], toolStatuses: [:])
+        let ids = actions.map(\.id)
+        XCTAssertTrue(ids.contains("document-to-pdf"))
+        XCTAssertTrue(ids.contains("reveal-in-finder"))
+        XCTAssertFalse(ids.contains("png-to-jpeg"))
+        XCTAssertFalse(ids.contains("video-to-mp4-h264"))
+
+        // Document to PDF must be suggested and top priority
+        XCTAssertEqual(ids.first, "document-to-pdf")
     }
 
     func testMergePDFRequiresMinTwo() {

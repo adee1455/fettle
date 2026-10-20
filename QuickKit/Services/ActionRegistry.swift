@@ -8,7 +8,7 @@ struct ActionRegistry: Sendable {
         self.actions = actions
     }
 
-    /// Filter actions that apply to a given selection.
+    /// Filter actions that apply to a given selection, ordered by smart relevance.
     func actions(
         for items: [FileItem],
         toolStatuses: [KnownTool: ToolStatus],
@@ -16,153 +16,294 @@ struct ActionRegistry: Sendable {
     ) -> [ConversionAction] {
         guard !items.isEmpty else { return [] }
         let kinds = Set(items.map(\.type.kind))
+        let extensions = Set(items.map { $0.url.pathExtension.lowercased() })
         let count = items.count
-        return actions.filter { action in
+
+        let filtered = actions.filter { action in
             // Ring mode filter
             if let ringMode, action.ringMode != ringMode { return false }
+
             // Kind filter: action must apply to ALL selected file kinds
             guard action.applicableKinds.isSuperset(of: kinds) else { return false }
+
+            // Smart source extension filtering (e.g. PNG should not show JPEG->PNG)
+            if let sourceExts = action.sourceExtensions {
+                guard !extensions.isEmpty && extensions.isSubset(of: sourceExts) else { return false }
+            }
+
+            // Smart excluded extensions (e.g. WebP should not convert to WebP)
+            if let excludedExts = action.excludedExtensions {
+                guard !extensions.isSubset(of: excludedExts) else { return false }
+            }
+
             // Cardinality
             guard count >= action.minSelection else { return false }
             if let max = action.maxSelection, count > max { return false }
+
             // Tool availability
             if let tool = action.requiredTool {
                 guard toolStatuses[tool]?.isUsable == true else { return false }
             }
+
             return true
+        }
+
+        // Smart ordering:
+        // 1. Suggested actions first
+        // 2. Ascending by priority number
+        return filtered.sorted { a, b in
+            if a.isSuggested != b.isSuggested {
+                return a.isSuggested && !b.isSuggested
+            }
+            return a.priority < b.priority
         }
     }
 
     static func buildCatalogue() -> [ConversionAction] {
         var list: [ConversionAction] = []
 
-        // -- Conversion actions --
-        // Image conversions (Image I/O, no external tool)
-        list.append(ConversionAction(
-            id: "png-to-jpeg",
-            title: "PNG → JPEG",
-            subtitle: "Lossy, Quality 85%",
-            systemImage: "photo",
-            ringMode: .conversion,
-            applicableKinds: [.image],
-            requiredTool: nil,
-            minSelection: 1,
-            maxSelection: nil
-        ))
-        list.append(ConversionAction(
-            id: "jpeg-to-png",
-            title: "JPEG → PNG",
-            subtitle: "Lossless",
-            systemImage: "photo",
-            ringMode: .conversion,
-            applicableKinds: [.image],
-            requiredTool: nil,
-            minSelection: 1,
-            maxSelection: nil
-        ))
+        // ==========================================
+        // MARK: - Image Conversions (Smart Priority Order: WebP -> JPEG -> PDF -> PNG)
+        // ==========================================
+
+        // Image to WebP (Modern high-efficiency, default top recommendation for images)
         list.append(ConversionAction(
             id: "image-to-webp",
-            title: "Image → WebP",
-            subtitle: "Quality 80",
+            title: "Convert to WebP",
+            subtitle: "Modern Web format, Quality 80",
             systemImage: "photo.badge.arrow.down",
             ringMode: .conversion,
             applicableKinds: [.image],
             requiredTool: nil,
             minSelection: 1,
-            maxSelection: nil
+            maxSelection: nil,
+            sourceExtensions: nil,
+            excludedExtensions: ["webp"],
+            isSuggested: true,
+            priority: 10,
+            targetFormat: "WEBP"
         ))
+
+        // PNG -> JPEG
         list.append(ConversionAction(
-            id: "heic-to-jpeg",
-            title: "HEIC → JPEG",
-            subtitle: "Quality 90%",
+            id: "png-to-jpeg",
+            title: "Convert to JPEG",
+            subtitle: "Smaller file size, Quality 85%",
             systemImage: "photo",
             ringMode: .conversion,
             applicableKinds: [.image],
             requiredTool: nil,
             minSelection: 1,
-            maxSelection: nil
+            maxSelection: nil,
+            sourceExtensions: ["png"],
+            excludedExtensions: nil,
+            isSuggested: true,
+            priority: 20,
+            targetFormat: "JPEG"
         ))
 
-        // Media conversions
+        // JPEG -> PNG
+        list.append(ConversionAction(
+            id: "jpeg-to-png",
+            title: "Convert to PNG",
+            subtitle: "Lossless crisp image",
+            systemImage: "photo",
+            ringMode: .conversion,
+            applicableKinds: [.image],
+            requiredTool: nil,
+            minSelection: 1,
+            maxSelection: nil,
+            sourceExtensions: ["jpg", "jpeg"],
+            excludedExtensions: nil,
+            isSuggested: true,
+            priority: 20,
+            targetFormat: "PNG"
+        ))
+
+        // HEIC -> JPEG
+        list.append(ConversionAction(
+            id: "heic-to-jpeg",
+            title: "Convert to JPEG",
+            subtitle: "Universal photo format, Quality 90%",
+            systemImage: "photo",
+            ringMode: .conversion,
+            applicableKinds: [.image],
+            requiredTool: nil,
+            minSelection: 1,
+            maxSelection: nil,
+            sourceExtensions: ["heic", "heif"],
+            excludedExtensions: nil,
+            isSuggested: true,
+            priority: 20,
+            targetFormat: "JPEG"
+        ))
+
+        // Images -> PDF
+        list.append(ConversionAction(
+            id: "images-to-pdf",
+            title: "Convert to PDF",
+            subtitle: "Single or multi-page PDF document",
+            systemImage: "doc.richtext",
+            ringMode: .conversion,
+            applicableKinds: [.image],
+            requiredTool: nil,
+            minSelection: 1,
+            maxSelection: nil,
+            sourceExtensions: nil,
+            excludedExtensions: nil,
+            isSuggested: true,
+            priority: 30,
+            targetFormat: "PDF"
+        ))
+
+        // ==========================================
+        // MARK: - Document / Presentation Conversions (Smart suggestions)
+        // ==========================================
+
+        list.append(ConversionAction(
+            id: "document-to-pdf",
+            title: "Convert to PDF",
+            subtitle: "Standardized document format",
+            systemImage: "doc.richtext",
+            ringMode: .conversion,
+            applicableKinds: [.document],
+            requiredTool: nil,
+            minSelection: 1,
+            maxSelection: nil,
+            sourceExtensions: nil,
+            excludedExtensions: ["pdf"],
+            isSuggested: true,
+            priority: 10,
+            targetFormat: "PDF"
+        ))
+
+        // ==========================================
+        // MARK: - Media Conversions
+        // ==========================================
+
         list.append(ConversionAction(
             id: "video-to-mp4-h264",
             title: "Video → MP4 (H.264)",
-            subtitle: "CRF 23, AAC 128k",
+            subtitle: "Universal playback compatibility",
             systemImage: "film",
             ringMode: .conversion,
             applicableKinds: [.video],
             requiredTool: nil,
             minSelection: 1,
-            maxSelection: nil
+            maxSelection: nil,
+            sourceExtensions: nil,
+            excludedExtensions: nil,
+            isSuggested: true,
+            priority: 10,
+            targetFormat: "MP4"
         ))
+
         list.append(ConversionAction(
             id: "video-to-mp4-hevc",
             title: "Video → MP4 (HEVC)",
-            subtitle: "CRF 28, High efficiency",
+            subtitle: "High efficiency compression",
             systemImage: "film.stack",
             ringMode: .conversion,
             applicableKinds: [.video],
             requiredTool: .ffmpeg,
             minSelection: 1,
-            maxSelection: nil
+            maxSelection: nil,
+            sourceExtensions: nil,
+            excludedExtensions: nil,
+            isSuggested: false,
+            priority: 15,
+            targetFormat: "HEVC"
         ))
-        list.append(ConversionAction(
-            id: "extract-audio-mp3",
-            title: "Extract Audio → MP3",
-            subtitle: "VBR ~190 kbps",
-            systemImage: "waveform",
-            ringMode: .conversion,
-            applicableKinds: [.video, .audio],
-            requiredTool: .ffmpeg,
-            minSelection: 1,
-            maxSelection: nil
-        ))
+
         list.append(ConversionAction(
             id: "extract-audio-aac",
             title: "Extract Audio → AAC",
-            subtitle: "192 kbps AAC / M4A",
+            subtitle: "Clean 192 kbps M4A / AAC audio",
             systemImage: "waveform.badge.plus",
             ringMode: .conversion,
             applicableKinds: [.video, .audio],
             requiredTool: nil,
             minSelection: 1,
-            maxSelection: nil
+            maxSelection: nil,
+            sourceExtensions: nil,
+            excludedExtensions: nil,
+            isSuggested: true,
+            priority: 20,
+            targetFormat: "AAC"
         ))
+
         list.append(ConversionAction(
-            id: "extract-audio-wav",
-            title: "Extract Audio → WAV",
-            subtitle: "Lossless 44.1 kHz PCM",
-            systemImage: "waveform.circle",
+            id: "extract-audio-mp3",
+            title: "Extract Audio → MP3",
+            subtitle: "Universal VBR ~190 kbps audio",
+            systemImage: "waveform",
             ringMode: .conversion,
             applicableKinds: [.video, .audio],
             requiredTool: .ffmpeg,
             minSelection: 1,
-            maxSelection: nil
+            maxSelection: nil,
+            sourceExtensions: nil,
+            excludedExtensions: nil,
+            isSuggested: true,
+            priority: 25,
+            targetFormat: "MP3"
         ))
+
         list.append(ConversionAction(
             id: "video-to-gif",
-            title: "Video → GIF",
-            subtitle: "480px, 15 fps palette",
+            title: "Video → Animated GIF",
+            subtitle: "Optimized 480px, 15 fps clip",
             systemImage: "play.rectangle.on.rectangle",
             ringMode: .conversion,
             applicableKinds: [.video],
             requiredTool: .ffmpeg,
             minSelection: 1,
-            maxSelection: nil
+            maxSelection: nil,
+            sourceExtensions: nil,
+            excludedExtensions: nil,
+            isSuggested: true,
+            priority: 30,
+            targetFormat: "GIF"
         ))
 
-        // PDF actions (PDFKit, no external tool)
+        list.append(ConversionAction(
+            id: "extract-audio-wav",
+            title: "Extract Audio → WAV",
+            subtitle: "Lossless 44.1 kHz PCM audio",
+            systemImage: "waveform.circle",
+            ringMode: .conversion,
+            applicableKinds: [.video, .audio],
+            requiredTool: .ffmpeg,
+            minSelection: 1,
+            maxSelection: nil,
+            sourceExtensions: nil,
+            excludedExtensions: nil,
+            isSuggested: false,
+            priority: 40,
+            targetFormat: "WAV"
+        ))
+
+        // ==========================================
+        // MARK: - PDF Conversions
+        // ==========================================
+
         list.append(ConversionAction(
             id: "merge-pdfs",
             title: "Merge PDFs",
-            subtitle: "Combine into single document",
+            subtitle: "Combine into a single document",
             systemImage: "doc.on.doc",
             ringMode: .conversion,
             applicableKinds: [.pdf],
             requiredTool: nil,
             minSelection: 2,
-            maxSelection: nil
+            maxSelection: nil,
+            sourceExtensions: nil,
+            excludedExtensions: nil,
+            isSuggested: true,
+            priority: 10,
+            targetFormat: "PDF"
         ))
+
         list.append(ConversionAction(
             id: "split-pdf-pages",
             title: "Split PDF Pages",
@@ -172,78 +313,97 @@ struct ActionRegistry: Sendable {
             applicableKinds: [.pdf],
             requiredTool: nil,
             minSelection: 1,
-            maxSelection: 1
-        ))
-        list.append(ConversionAction(
-            id: "images-to-pdf",
-            title: "Images → PDF",
-            subtitle: "Combine images into a multi-page PDF",
-            systemImage: "doc.richtext",
-            ringMode: .conversion,
-            applicableKinds: [.image],
-            requiredTool: nil,
-            minSelection: 1,
-            maxSelection: nil
+            maxSelection: 1,
+            sourceExtensions: nil,
+            excludedExtensions: nil,
+            isSuggested: true,
+            priority: 10,
+            targetFormat: "PDF"
         ))
 
-        // -- Editing actions --
+        // ==========================================
+        // MARK: - Editing Actions
+        // ==========================================
+
         list.append(ConversionAction(
             id: "resize-50",
             title: "Resize 50%",
-            subtitle: "Scale to half dimensions",
+            subtitle: "Scale dimensions by half",
             systemImage: "arrow.down.right.and.arrow.up.left",
             ringMode: .editing,
             applicableKinds: [.image],
             requiredTool: nil,
             minSelection: 1,
-            maxSelection: nil
+            maxSelection: nil,
+            isSuggested: false,
+            priority: 50,
+            targetFormat: nil
         ))
+
         list.append(ConversionAction(
             id: "strip-metadata",
             title: "Strip Metadata",
-            subtitle: "Remove EXIF / GPS",
+            subtitle: "Remove EXIF, GPS and privacy data",
             systemImage: "eye.slash",
             ringMode: .editing,
             applicableKinds: [.image],
             requiredTool: nil,
             minSelection: 1,
-            maxSelection: nil
+            maxSelection: nil,
+            isSuggested: false,
+            priority: 60,
+            targetFormat: nil
         ))
+
         list.append(ConversionAction(
             id: "video-thumbnail",
             title: "Extract Thumbnail",
-            subtitle: "Frame snapshot as JPEG",
+            subtitle: "High-resolution snapshot as JPEG",
             systemImage: "camera.viewfinder",
             ringMode: .editing,
             applicableKinds: [.video],
             requiredTool: nil,
             minSelection: 1,
-            maxSelection: nil
+            maxSelection: nil,
+            isSuggested: false,
+            priority: 70,
+            targetFormat: "JPEG"
         ))
 
-        // -- File actions --
+        // ==========================================
+        // MARK: - File Actions
+        // ==========================================
+
         list.append(ConversionAction(
             id: "reveal-in-finder",
             title: "Reveal in Finder",
-            subtitle: "",
+            subtitle: "Show item in folder",
             systemImage: "folder",
             ringMode: .fileActions,
             applicableKinds: Set(FileKind.allCases),
             requiredTool: nil,
             minSelection: 1,
-            maxSelection: nil
+            maxSelection: nil,
+            isSuggested: false,
+            priority: 100,
+            targetFormat: nil
         ))
+
         list.append(ConversionAction(
             id: "copy-path",
             title: "Copy Path",
-            subtitle: "POSIX path to clipboard",
+            subtitle: "Copy POSIX path to clipboard",
             systemImage: "doc.on.clipboard",
             ringMode: .fileActions,
             applicableKinds: Set(FileKind.allCases),
             requiredTool: nil,
             minSelection: 1,
-            maxSelection: nil
+            maxSelection: nil,
+            isSuggested: false,
+            priority: 110,
+            targetFormat: nil
         ))
+
         list.append(ConversionAction(
             id: "duplicate-file",
             title: "Duplicate",
@@ -253,7 +413,10 @@ struct ActionRegistry: Sendable {
             applicableKinds: Set(FileKind.allCases),
             requiredTool: nil,
             minSelection: 1,
-            maxSelection: nil
+            maxSelection: nil,
+            isSuggested: false,
+            priority: 120,
+            targetFormat: nil
         ))
 
         return list

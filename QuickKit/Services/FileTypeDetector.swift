@@ -16,6 +16,15 @@ struct FileTypeDetector: Sendable {
         if utType.conforms(to: .pdf) {
             return FileType(kind: .pdf, identifier: utType.identifier, localizedDescription: utType.localizedDescription ?? "PDF")
         }
+        if utType.conforms(to: .presentation) || utType.identifier.contains("presentation") || utType.identifier.contains("powerpoint") || utType.identifier.contains("keynote") {
+            return FileType(kind: .document, identifier: utType.identifier, localizedDescription: utType.localizedDescription ?? "Presentation")
+        }
+        if utType.conforms(to: .spreadsheet) || utType.identifier.contains("spreadsheet") || utType.identifier.contains("excel") || utType.identifier.contains("numbers") {
+            return FileType(kind: .document, identifier: utType.identifier, localizedDescription: utType.localizedDescription ?? "Spreadsheet")
+        }
+        if utType.conforms(to: .rtf) || utType.conforms(to: .plainText) || utType.identifier.contains("wordprocessing") || utType.identifier.contains("word") || utType.identifier.contains("pages") || utType.identifier.contains("document") {
+            return FileType(kind: .document, identifier: utType.identifier, localizedDescription: utType.localizedDescription ?? "Document")
+        }
         if utType.conforms(to: .image) {
             return FileType(kind: .image, identifier: utType.identifier, localizedDescription: utType.localizedDescription ?? "Image")
         }

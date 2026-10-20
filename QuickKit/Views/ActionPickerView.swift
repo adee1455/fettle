@@ -8,12 +8,11 @@ struct ActionPickerView: View {
 
     var body: some View {
         let targets = appState.selectedItems.isEmpty ? appState.items : appState.selectedItems
-        let allActions = appState.registry.actions
 
         VStack(alignment: .leading, spacing: 16) {
             // Header
             HStack {
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 3) {
                     Text("Action Picker")
                         .font(.title2.weight(.bold))
 
@@ -38,12 +37,12 @@ struct ActionPickerView: View {
                 ContentUnavailableView(
                     "No files loaded",
                     systemImage: "tray",
-                    description: Text("Drop files into the main window to pick actions.")
+                    description: Text("Drop files into the main window or hold Shift while dragging from Finder.")
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                // Filter Picker
-                HStack {
+                // Filter Picker & Search Bar
+                HStack(spacing: 12) {
                     Picker("Category", selection: $selectedRingMode) {
                         Text("All").tag(Optional<ActionRingMode>.none)
                         ForEach(ActionRingMode.allCases, id: \.self) { mode in
@@ -51,58 +50,100 @@ struct ActionPickerView: View {
                         }
                     }
                     .pickerStyle(.segmented)
-                    .frame(maxWidth: 320)
+                    .frame(maxWidth: 340)
 
                     Spacer()
 
-                    TextField("Search actions…", text: $searchText)
-                        .textFieldStyle(.roundedBorder)
-                        .frame(maxWidth: 200)
+                    HStack(spacing: 6) {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundStyle(.secondary)
+                            .font(.caption)
+                        TextField("Search actions…", text: $searchText)
+                            .textFieldStyle(.plain)
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(Color(nsColor: .controlBackgroundColor))
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .strokeBorder(Color.white.opacity(0.12), lineWidth: 1)
+                    )
+                    .frame(maxWidth: 220)
                 }
 
                 // Action list grouped by ring mode
                 List {
                     let modes: [ActionRingMode] = selectedRingMode.map { [$0] } ?? ActionRingMode.allCases
                     ForEach(modes, id: \.self) { mode in
-                        let modeActions = filteredActions(allActions: allActions, mode: mode, targets: targets)
+                        let modeActions = filteredActions(mode: mode, targets: targets)
                         if !modeActions.isEmpty {
-                            Section(mode.title) {
+                            Section {
                                 ForEach(modeActions) { action in
-                                    actionRow(action: action, targets: targets)
+                                    actionRow(action: action)
                                 }
+                            } header: {
+                                Text(mode.title.uppercased())
+                                    .font(.system(size: 11, weight: .bold))
+                                    .foregroundStyle(.secondary)
                             }
                         }
                     }
                 }
                 .listStyle(.inset(alternatesRowBackgrounds: true))
-                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             }
         }
         .padding(20)
-        .frame(minWidth: 540, minHeight: 460)
+        .frame(minWidth: 560, minHeight: 480)
     }
 
-    private func actionRow(action: ConversionAction, targets: [FileItem]) -> some View {
-        let isApplicable = actionApplies(action: action, targets: targets)
+    private func actionRow(action: ConversionAction) -> some View {
         let toolReady = isToolAvailable(action: action)
-        let canRun = isApplicable && toolReady
 
         return Button {
-            if canRun {
+            if toolReady {
+                DesignTokens.playHapticFeedback()
                 appState.runAction(action)
                 dismiss()
             }
         } label: {
             HStack(spacing: 12) {
-                Image(systemName: action.systemImage)
-                    .font(.title3)
-                    .foregroundStyle(canRun ? Color.accentColor : Color.secondary)
-                    .frame(width: 24, height: 24)
+                // Icon container
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(toolReady ? Color.accentColor.opacity(0.15) : Color.secondary.opacity(0.12))
+                        .frame(width: 34, height: 34)
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(action.title)
-                        .font(.body.weight(.medium))
-                        .foregroundStyle(canRun ? .primary : .secondary)
+                    Image(systemName: action.systemImage)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(toolReady ? Color.accentColor : Color.secondary)
+                }
+
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(spacing: 6) {
+                        Text(action.title)
+                            .font(.body.weight(.semibold))
+                            .foregroundStyle(toolReady ? .primary : .secondary)
+
+                        if let format = action.targetFormat {
+                            Text(format)
+                                .font(.system(size: 9, weight: .heavy, design: .monospaced))
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 2)
+                                .background(Capsule().fill(Color.accentColor.opacity(0.16)))
+                                .foregroundStyle(Color.accentColor)
+                        }
+
+                        if action.isSuggested {
+                            Text("SUGGESTED")
+                                .font(.system(size: 8, weight: .bold))
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 2)
+                                .background(Capsule().fill(Color.orange.opacity(0.2)))
+                                .foregroundStyle(.orange)
+                        }
+                    }
 
                     if !action.subtitle.isEmpty {
                         Text(action.subtitle)
@@ -115,47 +156,39 @@ struct ActionPickerView: View {
 
                 if !toolReady, let tool = action.requiredTool {
                     Text("Requires \(tool.executableName)")
-                        .font(.caption2)
+                        .font(.caption2.weight(.medium))
                         .foregroundStyle(.orange)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
                         .background(Color.orange.opacity(0.12))
                         .clipShape(Capsule())
-                } else if !isApplicable {
-                    Text("Incompatible selection")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
                 } else {
-                    Image(systemName: "play.circle.fill")
+                    Image(systemName: "arrow.right.circle.fill")
                         .font(.title3)
                         .foregroundStyle(Color.accentColor)
                 }
             }
+            .padding(.vertical, 4)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .disabled(!canRun)
+        .disabled(!toolReady)
     }
 
-    private func filteredActions(allActions: [ConversionAction], mode: ActionRingMode, targets: [FileItem]) -> [ConversionAction] {
-        allActions.filter { action in
-            guard action.ringMode == mode else { return false }
-            if !searchText.isEmpty {
-                let matchesTitle = action.title.localizedCaseInsensitiveContains(searchText)
-                let matchesSubtitle = action.subtitle.localizedCaseInsensitiveContains(searchText)
-                if !matchesTitle && !matchesSubtitle { return false }
-            }
-            return true
+    private func filteredActions(mode: ActionRingMode, targets: [FileItem]) -> [ConversionAction] {
+        let matching = appState.registry.actions(
+            for: targets,
+            toolStatuses: appState.toolStatuses,
+            ringMode: mode
+        )
+
+        guard !searchText.isEmpty else { return matching }
+
+        return matching.filter { action in
+            action.title.localizedCaseInsensitiveContains(searchText) ||
+            action.subtitle.localizedCaseInsensitiveContains(searchText) ||
+            (action.targetFormat?.localizedCaseInsensitiveContains(searchText) ?? false)
         }
-    }
-
-    private func actionApplies(action: ConversionAction, targets: [FileItem]) -> Bool {
-        guard !targets.isEmpty else { return false }
-        let kinds = Set(targets.map(\.type.kind))
-        guard action.applicableKinds.isSuperset(of: kinds) else { return false }
-        guard targets.count >= action.minSelection else { return false }
-        if let max = action.maxSelection, targets.count > max { return false }
-        return true
     }
 
     private func isToolAvailable(action: ConversionAction) -> Bool {
@@ -166,8 +199,8 @@ struct ActionPickerView: View {
     private func targetSummary(_ targets: [FileItem]) -> String {
         let isSelection = !appState.selectedItems.isEmpty
         let prefix = isSelection ? "Selected \(targets.count)" : "All \(targets.count)"
-        let kinds = Dictionary(grouping: targets, by: { $0.type.kind.rawValue.capitalized })
-            .map { "\($0.value.count) \($0.key.lowercased())\($0.value.count > 1 ? "s" : "")" }
+        let kinds = Dictionary(grouping: targets, by: { $0.type.localizedDescription })
+            .map { "\($0.value.count) \($0.key)" }
             .joined(separator: ", ")
         return "\(prefix) file(s): \(kinds)"
     }
