@@ -83,12 +83,23 @@ struct ActionRegistry: Sendable {
             maxSelection: nil
         ))
 
-        // Media conversions (require ffmpeg)
+        // Media conversions
         list.append(ConversionAction(
             id: "video-to-mp4-h264",
             title: "Video → MP4 (H.264)",
             subtitle: "CRF 23, AAC 128k",
             systemImage: "film",
+            ringMode: .conversion,
+            applicableKinds: [.video],
+            requiredTool: nil,
+            minSelection: 1,
+            maxSelection: nil
+        ))
+        list.append(ConversionAction(
+            id: "video-to-mp4-hevc",
+            title: "Video → MP4 (HEVC)",
+            subtitle: "CRF 28, High efficiency",
+            systemImage: "film.stack",
             ringMode: .conversion,
             applicableKinds: [.video],
             requiredTool: .ffmpeg,
@@ -102,6 +113,39 @@ struct ActionRegistry: Sendable {
             systemImage: "waveform",
             ringMode: .conversion,
             applicableKinds: [.video, .audio],
+            requiredTool: .ffmpeg,
+            minSelection: 1,
+            maxSelection: nil
+        ))
+        list.append(ConversionAction(
+            id: "extract-audio-aac",
+            title: "Extract Audio → AAC",
+            subtitle: "192 kbps AAC / M4A",
+            systemImage: "waveform.badge.plus",
+            ringMode: .conversion,
+            applicableKinds: [.video, .audio],
+            requiredTool: nil,
+            minSelection: 1,
+            maxSelection: nil
+        ))
+        list.append(ConversionAction(
+            id: "extract-audio-wav",
+            title: "Extract Audio → WAV",
+            subtitle: "Lossless 44.1 kHz PCM",
+            systemImage: "waveform.circle",
+            ringMode: .conversion,
+            applicableKinds: [.video, .audio],
+            requiredTool: .ffmpeg,
+            minSelection: 1,
+            maxSelection: nil
+        ))
+        list.append(ConversionAction(
+            id: "video-to-gif",
+            title: "Video → GIF",
+            subtitle: "480px, 15 fps palette",
+            systemImage: "play.rectangle.on.rectangle",
+            ringMode: .conversion,
+            applicableKinds: [.video],
             requiredTool: .ffmpeg,
             minSelection: 1,
             maxSelection: nil
@@ -161,6 +205,17 @@ struct ActionRegistry: Sendable {
             systemImage: "eye.slash",
             ringMode: .editing,
             applicableKinds: [.image],
+            requiredTool: nil,
+            minSelection: 1,
+            maxSelection: nil
+        ))
+        list.append(ConversionAction(
+            id: "video-thumbnail",
+            title: "Extract Thumbnail",
+            subtitle: "Frame snapshot as JPEG",
+            systemImage: "camera.viewfinder",
+            ringMode: .editing,
+            applicableKinds: [.video],
             requiredTool: nil,
             minSelection: 1,
             maxSelection: nil

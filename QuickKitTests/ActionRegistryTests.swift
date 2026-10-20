@@ -60,13 +60,20 @@ final class ActionRegistryTests: XCTestCase {
         )
 
         let actionsMissing = registry.actions(for: [video], toolStatuses: [.ffmpeg: .missing])
-        XCTAssertFalse(actionsMissing.map(\.id).contains("video-to-mp4-h264"))
+        let missingIds = actionsMissing.map(\.id)
+        XCTAssertFalse(missingIds.contains("video-to-mp4-hevc"))
+        XCTAssertFalse(missingIds.contains("extract-audio-mp3"))
+        // video-to-mp4-h264 is supported via AVFoundation fallback
+        XCTAssertTrue(missingIds.contains("video-to-mp4-h264"))
 
         let actionsIncompatible = registry.actions(
             for: [video],
             toolStatuses: [.ffmpeg: .incompatibleArchitecture(url: URL(fileURLWithPath: "/usr/local/bin/ffmpeg"), architecture: .x86_64)]
         )
-        XCTAssertFalse(actionsIncompatible.map(\.id).contains("video-to-mp4-h264"))
+        let incompIds = actionsIncompatible.map(\.id)
+        XCTAssertFalse(incompIds.contains("video-to-mp4-hevc"))
+        XCTAssertFalse(incompIds.contains("extract-audio-mp3"))
+        XCTAssertTrue(incompIds.contains("video-to-mp4-h264"))
     }
 
     func testVideoActionsShownWithFFmpeg() {
@@ -79,7 +86,10 @@ final class ActionRegistryTests: XCTestCase {
             for: [video],
             toolStatuses: [.ffmpeg: .available(url: URL(fileURLWithPath: "/opt/homebrew/bin/ffmpeg"), architecture: .arm64)]
         )
-        XCTAssertTrue(actions.map(\.id).contains("video-to-mp4-h264"))
+        let ids = actions.map(\.id)
+        XCTAssertTrue(ids.contains("video-to-mp4-h264"))
+        XCTAssertTrue(ids.contains("video-to-mp4-hevc"))
+        XCTAssertTrue(ids.contains("extract-audio-mp3"))
     }
 
     func testMixedSelectionFiltersCorrectly() {

@@ -12,10 +12,16 @@ final class JobManager {
 
     let imageService: ImageService
     let pdfService: PDFService
+    let mediaService: MediaService
 
-    init(imageService: ImageService = ImageService(), pdfService: PDFService = PDFService()) {
+    init(
+        imageService: ImageService = ImageService(),
+        pdfService: PDFService = PDFService(),
+        mediaService: MediaService = MediaService()
+    ) {
         self.imageService = imageService
         self.pdfService = pdfService
+        self.mediaService = mediaService
     }
 
     func enqueue(action: ConversionAction, inputFiles: [FileItem]) -> Job {
@@ -62,6 +68,8 @@ final class JobManager {
                 await executeImageJob(job: job)
             } else if isPDFAction(job.action.id) {
                 await executePDFJob(job: job)
+            } else if isMediaAction(job.action.id) {
+                await executeMediaJob(job: job)
             } else if isFileAction(job.action.id) {
                 await executeFileActionJob(job: job)
             } else {
@@ -85,6 +93,18 @@ final class JobManager {
 
     private func isPDFAction(_ actionId: String) -> Bool {
         ["merge-pdfs", "images-to-pdf", "split-pdf-pages"].contains(actionId)
+    }
+
+    private func isMediaAction(_ actionId: String) -> Bool {
+        [
+            "video-to-mp4-h264",
+            "video-to-mp4-hevc",
+            "extract-audio-mp3",
+            "extract-audio-aac",
+            "extract-audio-wav",
+            "video-to-gif",
+            "video-thumbnail"
+        ].contains(actionId)
     }
 
     private func isFileAction(_ actionId: String) -> Bool {
@@ -226,6 +246,93 @@ final class JobManager {
             job.statusMessage = "PDF processing failed"
         }
 
+        drainQueue()
+    }
+
+    // MARK: - Media Engine Execution
+
+    private func executeMediaJob(job: Job) async {
+        let outputDirectory = outputFolderProvider()
+        let total = job.inputFiles.count
+        var generatedURLs: [URL] = []
+
+        for (index, fileItem) in job.inputFiles.enumerated() {
+            guard !Task.isCancelled else {
+                job.status = .cancelled
+                job.statusMessage = "Cancelled"
+                drainQueue()
+                return
+            }
+
+            let targetExt: String
+            switch job.action.id {
+            case "video-to-mp4-h264", "video-to-mp4-hevc":
+                targetExt = "mp4"
+            case "extract-audio-mp3":
+                targetExt = "mp3"
+            case "extract-audio-aac":
+                targetExt = "m4a"
+            case "extract-audio-wav":
+                targetExt = "wav"
+            case "video-to-gif":
+                targetExt = "gif"
+            case "video-thumbnail":
+                targetExt = "jpg"
+            default:
+                targetExt = "mp4"
+            }
+
+            let destinationURL = OutputManager.destinationURL(
+                for: fileItem.url,
+                targetExtension: targetExt,
+                in: outputDirectory
+            )
+
+            job.statusMessage = "Processing \(fileItem.displayName) (\(index + 1)/\(total))…"
+
+            do {
+                try await mediaService.processMedia(
+                    at: fileItem.url,
+                    destinationURL: destinationURL,
+                    actionId: job.action.id
+                ) { [weak job] ratio, status in
+                    Task { @MainActor in
+                        guard let job else { return }
+                        let overallProgress = (Double(index) + ratio) / Double(total)
+                        job.progress = min(1.0, max(0.0, overallProgress))
+                        job.statusMessage = "\(fileItem.displayName): \(status)"
+                    }
+                }
+
+                guard !Task.isCancelled else {
+                    job.status = .cancelled
+                    job.statusMessage = "Cancelled"
+                    drainQueue()
+                    return
+                }
+
+                generatedURLs.append(destinationURL)
+                job.outputURLs = generatedURLs
+                job.progress = Double(index + 1) / Double(total)
+            } catch {
+                guard !Task.isCancelled else {
+                    job.status = .cancelled
+                    job.statusMessage = "Cancelled"
+                    drainQueue()
+                    return
+                }
+                job.status = .failed
+                job.errorMessage = error.localizedDescription
+                job.statusMessage = "Failed on \(fileItem.displayName): \(error.localizedDescription)"
+                drainQueue()
+                return
+            }
+        }
+
+        job.status = .completed
+        job.progress = 1.0
+        job.statusMessage = "Completed (\(generatedURLs.count) file\(generatedURLs.count == 1 ? "" : "s"))"
+        job.completedAt = Date()
         drainQueue()
     }
 

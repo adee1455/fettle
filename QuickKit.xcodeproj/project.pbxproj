@@ -17,6 +17,8 @@
 		240C2A1CA46F7F4A3D2A0258 /* MainWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 171DBA54181724CE1D1FA715 /* MainWindow.swift */; };
 		24A32D87898BC5A4EA7D57F2 /* Job.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B558D92B012C599A838F87C /* Job.swift */; };
 		289823CCD5A5318BD1E40320 /* ProcessRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECDFB98F0ADAC9D8D7857A0A /* ProcessRunner.swift */; };
+		2AD6F2755AFA6670AA5636F0 /* MediaServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0E99D69EB285F6C23818CA /* MediaServiceTests.swift */; };
+		2C49CDD8A00E5E748640A586 /* MediaService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6EE0F9F23727821EB125069 /* MediaService.swift */; };
 		39C7832E8D4E1EFF753EA42F /* DragSpikeHUD.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7977537C051C1D71A3AF38D /* DragSpikeHUD.swift */; };
 		3A17C3F1948B0379DC169DEF /* JobManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2952CB716C5266779DB455A0 /* JobManagerTests.swift */; };
 		41913FFE08A1B600A9133D1F /* FileType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82E4BF766AB09B5BC53E4B79 /* FileType.swift */; };
@@ -79,11 +81,13 @@
 		8B558D92B012C599A838F87C /* Job.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Job.swift; sourceTree = "<group>"; };
 		8BB30D81AFAA6DC5119414DC /* FileTypeDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileTypeDetector.swift; sourceTree = "<group>"; };
 		8F11C90C50AC136D73AA93E5 /* ToolStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolStatusView.swift; sourceTree = "<group>"; };
+		9F0E99D69EB285F6C23818CA /* MediaServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaServiceTests.swift; sourceTree = "<group>"; };
 		A60B4617695BBA022F522915 /* ActionRegistryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionRegistryTests.swift; sourceTree = "<group>"; };
 		A87C772847AEF7A6D7295941 /* ImageServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageServiceTests.swift; sourceTree = "<group>"; };
 		B4594A292A648290A80E1DC1 /* QuickKitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = QuickKitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C0BF379312864F49BDB65B9E /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		C4BFAA76A0F0754F73EAFDA3 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		C6EE0F9F23727821EB125069 /* MediaService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaService.swift; sourceTree = "<group>"; };
 		C76EC35C44ED55483CE9ADF1 /* FloatingPanelController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingPanelController.swift; sourceTree = "<group>"; };
 		CD9E2EB8B100AD0786146DE1 /* ActionPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionPickerView.swift; sourceTree = "<group>"; };
 		D4FB16DDAA5D6A232FCFC5D7 /* FileListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileListView.swift; sourceTree = "<group>"; };
@@ -122,6 +126,7 @@
 				10FE797B2981F35CEBBA5DAD /* ImageService.swift */,
 				19A34E369771EDCE706A67F5 /* JobManager.swift */,
 				0FEE995A1AFE950E05FF94E5 /* MachOReader.swift */,
+				C6EE0F9F23727821EB125069 /* MediaService.swift */,
 				7E7A3D0F89DE6C4438A75ABC /* OutputManager.swift */,
 				05C28E250AB9E37519F5AE39 /* PDFService.swift */,
 				ECDFB98F0ADAC9D8D7857A0A /* ProcessRunner.swift */,
@@ -155,6 +160,7 @@
 				2CB45A9EF1E14300281E3DCA /* FileTypeDetectorTests.swift */,
 				A87C772847AEF7A6D7295941 /* ImageServiceTests.swift */,
 				2952CB716C5266779DB455A0 /* JobManagerTests.swift */,
+				9F0E99D69EB285F6C23818CA /* MediaServiceTests.swift */,
 				1061895D8C9936C7C44E098A /* OutputManagerTests.swift */,
 				EF204D47223EF02C54F9762A /* PDFServiceTests.swift */,
 				DECAD1528BD5C4980B2EEC2A /* ProcessRunnerTests.swift */,
@@ -306,6 +312,7 @@
 				0F94D780CE62F4A6A579BA58 /* FileTypeDetectorTests.swift in Sources */,
 				A010929C9F695F5EEC8070A6 /* ImageServiceTests.swift in Sources */,
 				3A17C3F1948B0379DC169DEF /* JobManagerTests.swift in Sources */,
+				2AD6F2755AFA6670AA5636F0 /* MediaServiceTests.swift in Sources */,
 				532D95B763145CF0020A30AB /* OutputManagerTests.swift in Sources */,
 				D111FB7D37DF51E55AC4F9C2 /* PDFServiceTests.swift in Sources */,
 				E5C4A05EABA32BF9D662238A /* ProcessRunnerTests.swift in Sources */,
@@ -337,6 +344,7 @@
 				7A9F605CF4E8D3F688773789 /* JobQueueView.swift in Sources */,
 				23F95F98654BC097E388B4B9 /* MachOReader.swift in Sources */,
 				240C2A1CA46F7F4A3D2A0258 /* MainWindow.swift in Sources */,
+				2C49CDD8A00E5E748640A586 /* MediaService.swift in Sources */,
 				AB81451E14044D8514CCF7A0 /* OutputManager.swift in Sources */,
 				5A2FF94AFB7969659CF62024 /* PDFService.swift in Sources */,
 				289823CCD5A5318BD1E40320 /* ProcessRunner.swift in Sources */,

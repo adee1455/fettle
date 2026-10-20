@@ -33,6 +33,20 @@ final class ProcessRunner: Sendable {
         arguments: [String],
         currentDirectoryURL: URL? = nil
     ) async throws -> ProcessResult {
+        try await runStreaming(
+            executableURL: executableURL,
+            arguments: arguments,
+            currentDirectoryURL: currentDirectoryURL,
+            onOutputLine: nil
+        )
+    }
+
+    static func runStreaming(
+        executableURL: URL,
+        arguments: [String],
+        currentDirectoryURL: URL? = nil,
+        onOutputLine: (@Sendable (String) -> Void)?
+    ) async throws -> ProcessResult {
         guard FileManager.default.isExecutableFile(atPath: executableURL.path) else {
             throw ProcessRunnerError.executableNotFound(executableURL)
         }
@@ -49,7 +63,6 @@ final class ProcessRunner: Sendable {
         process.standardOutput = stdoutPipe
         process.standardError = stderrPipe
 
-        // Cancellation handler: if task is cancelled, terminate process
         return try await withTaskCancellationHandler {
             try await withCheckedThrowingContinuation { continuation in
                 do {
@@ -59,26 +72,91 @@ final class ProcessRunner: Sendable {
                     return
                 }
 
-                DispatchQueue.global(qos: .userInitiated).async {
-                    let stdoutData = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
-                    let stderrData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
-                    process.waitUntilExit()
+                if let onOutputLine {
+                    let streamQueue = DispatchQueue(label: "dev.adee.quickkit.process.stream", qos: .userInitiated)
+                    var stdoutAccumulator = Data()
+                    var stderrAccumulator = Data()
+                    var lineBuffer = ""
 
-                    let result = ProcessResult(
-                        exitCode: process.terminationStatus,
-                        standardOutput: stdoutData,
-                        standardError: stderrData
-                    )
+                    stdoutPipe.fileHandleForReading.readabilityHandler = { handle in
+                        let data = handle.availableData
+                        guard !data.isEmpty else { return }
+                        streamQueue.async {
+                            stdoutAccumulator.append(data)
+                            if let text = String(data: data, encoding: .utf8) {
+                                lineBuffer.append(text)
+                                while let newlineIndex = lineBuffer.firstIndex(of: "\n") {
+                                    let line = String(lineBuffer[..<newlineIndex])
+                                    lineBuffer.removeSubrange(...newlineIndex)
+                                    onOutputLine(line.trimmingCharacters(in: CharacterSet(charactersIn: "\r")))
+                                }
+                            }
+                        }
+                    }
 
-                    if result.isSuccess {
-                        continuation.resume(returning: result)
-                    } else {
-                        continuation.resume(
-                            throwing: ProcessRunnerError.executionFailed(
-                                exitCode: result.exitCode,
-                                message: result.utf8Error.trimmingCharacters(in: .whitespacesAndNewlines)
+                    stderrPipe.fileHandleForReading.readabilityHandler = { handle in
+                        let data = handle.availableData
+                        guard !data.isEmpty else { return }
+                        streamQueue.async {
+                            stderrAccumulator.append(data)
+                        }
+                    }
+
+                    DispatchQueue.global(qos: .userInitiated).async {
+                        process.waitUntilExit()
+
+                        stdoutPipe.fileHandleForReading.readabilityHandler = nil
+                        stderrPipe.fileHandleForReading.readabilityHandler = nil
+
+                        streamQueue.sync {
+                            if !lineBuffer.isEmpty {
+                                let trimmed = lineBuffer.trimmingCharacters(in: .whitespacesAndNewlines)
+                                if !trimmed.isEmpty {
+                                    onOutputLine(trimmed)
+                                }
+                                lineBuffer.removeAll()
+                            }
+
+                            let result = ProcessResult(
+                                exitCode: process.terminationStatus,
+                                standardOutput: stdoutAccumulator,
+                                standardError: stderrAccumulator
                             )
+
+                            if result.isSuccess {
+                                continuation.resume(returning: result)
+                            } else {
+                                continuation.resume(
+                                    throwing: ProcessRunnerError.executionFailed(
+                                        exitCode: result.exitCode,
+                                        message: result.utf8Error.trimmingCharacters(in: .whitespacesAndNewlines)
+                                    )
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    DispatchQueue.global(qos: .userInitiated).async {
+                        let stdoutData = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
+                        let stderrData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
+                        process.waitUntilExit()
+
+                        let result = ProcessResult(
+                            exitCode: process.terminationStatus,
+                            standardOutput: stdoutData,
+                            standardError: stderrData
                         )
+
+                        if result.isSuccess {
+                            continuation.resume(returning: result)
+                        } else {
+                            continuation.resume(
+                                throwing: ProcessRunnerError.executionFailed(
+                                    exitCode: result.exitCode,
+                                    message: result.utf8Error.trimmingCharacters(in: .whitespacesAndNewlines)
+                                )
+                            )
+                        }
                     }
                 }
             }
