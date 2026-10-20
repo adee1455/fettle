@@ -26,6 +26,11 @@ final class AppState {
     init() {
         let monitor = DragInteractionMonitor(settings: AppSettings())
         self.dragMonitor = monitor
+        monitor.onEscape = { [weak self] in
+            Task { @MainActor in
+                self?.closeRadialMenu()
+            }
+        }
         monitor.start()
         refreshTools()
         jobManager.maxConcurrentJobs = settings.maxConcurrentJobs
@@ -79,16 +84,16 @@ final class AppState {
         statusMessage = "Selection cleared."
     }
 
-    func availableActions(ringMode: ActionRingMode? = nil) -> [ConversionAction] {
-        let targets = selectedItems.isEmpty ? items : selectedItems
-        return registry.actions(for: targets, toolStatuses: toolStatuses, ringMode: ringMode)
+    func availableActions(ringMode: ActionRingMode? = nil, targets: [FileItem]? = nil) -> [ConversionAction] {
+        let actualTargets = targets ?? (selectedItems.isEmpty ? items : selectedItems)
+        return registry.actions(for: actualTargets, toolStatuses: toolStatuses, ringMode: ringMode)
     }
 
-    func runAction(_ action: ConversionAction) {
-        let targets = selectedItems.isEmpty ? items : selectedItems
-        guard !targets.isEmpty else { return }
-        _ = jobManager.enqueue(action: action, inputFiles: targets)
-        statusMessage = "Queued: \(action.title) on \(targets.count) file(s)"
+    func runAction(_ action: ConversionAction, targets: [FileItem]? = nil) {
+        let actualTargets = targets ?? (selectedItems.isEmpty ? items : selectedItems)
+        guard !actualTargets.isEmpty else { return }
+        _ = jobManager.enqueue(action: action, inputFiles: actualTargets)
+        statusMessage = "Queued: \(action.title) on \(actualTargets.count) file(s)"
     }
 
     func revealSnapshotFromDrag() {
@@ -109,6 +114,7 @@ final class AppState {
 
     func closeRadialMenu() {
         dragMonitor.cancelLatch()
+        dragMonitor.clearSnapshot()
         floatingPanel.hide()
     }
 
@@ -119,13 +125,13 @@ final class AppState {
             return
         }
         let point = NSEvent.mouseLocation
-        floatingPanel.show(at: point, size: NSSize(width: 340, height: 340)) {
+        floatingPanel.show(at: point, size: NSSize(width: 350, height: 350)) {
             RadialMenuView(
                 mode: mode,
                 targets: targets,
                 onSelect: { [weak self] action in
                     guard let self else { return }
-                    self.runAction(action)
+                    self.runAction(action, targets: targets)
                     self.closeRadialMenu()
                 },
                 onDismiss: { [weak self] in
@@ -151,16 +157,14 @@ final class AppState {
             targets = selectedItems.isEmpty ? items : selectedItems
         }
 
-        floatingPanel.show(at: dragMonitor.pointer, size: NSSize(width: 340, height: 340)) {
+        floatingPanel.show(at: dragMonitor.pointer, size: NSSize(width: 350, height: 350)) {
             RadialMenuView(
                 mode: mode,
                 targets: targets,
                 onSelect: { [weak self] action in
                     guard let self else { return }
-                    if !urls.isEmpty {
-                        self.addDroppedURLs(urls)
-                    }
-                    self.runAction(action)
+                    // Perform conversion strictly on the dragged files
+                    self.runAction(action, targets: targets)
                     self.closeRadialMenu()
                 },
                 onDismiss: { [weak self] in

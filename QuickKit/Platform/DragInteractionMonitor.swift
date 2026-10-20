@@ -1,4 +1,5 @@
 import AppKit
+import CoreGraphics
 import Foundation
 
 /// Public-API Finder-drag detector: drag pasteboard + global mouse & modifier monitors.
@@ -17,6 +18,7 @@ final class DragInteractionMonitor {
     private(set) var lastEventDescription = "Idle"
 
     var settings: AppSettings
+    var onEscape: () -> Void
 
     private var lastSeenChangeCount: Int
     private var dragMonitor: Any?
@@ -25,8 +27,8 @@ final class DragInteractionMonitor {
     private var localFlagsMonitor: Any?
     private var localKeyMonitor: Any?
     private var modifierPoll: Timer?
+    private var wasEscapeDown = false
     private let pasteboard = NSPasteboard(name: .drag)
-    private let onEscape: () -> Void
 
     init(settings: AppSettings = AppSettings(), onEscape: @escaping () -> Void = {}) {
         self.settings = settings
@@ -69,7 +71,7 @@ final class DragInteractionMonitor {
             return event
         }
 
-        // 5. Escape key dismissal
+        // 5. Local Escape key monitor (when app has key window)
         localKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown]) { [weak self] event in
             if event.keyCode == 53 {
                 Task { @MainActor in
@@ -82,6 +84,7 @@ final class DragInteractionMonitor {
         }
 
         // 6. High-responsiveness polling timer (Tangerine-style dual monitor)
+        // Checks global Escape key state (keycode 53) and mouse dragging state
         modifierPoll = Timer.scheduledTimer(withTimeInterval: 0.03, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.pollState()
@@ -110,12 +113,15 @@ final class DragInteractionMonitor {
 
     func cancelLatch() {
         latchedMode = nil
+        clearSnapshot()
         lastEventDescription = "Latch cancelled"
     }
 
     func snapshotFileURLsIfNeeded() {
-        guard snapshotURLs.isEmpty else { return }
-        snapshotURLs = Self.readFileURLs(from: pasteboard)
+        let urls = Self.readFileURLs(from: pasteboard)
+        if !urls.isEmpty {
+            snapshotURLs = urls
+        }
     }
 
     func clearSnapshot() {
@@ -136,6 +142,20 @@ final class DragInteractionMonitor {
     }
 
     private func pollState() {
+        // 1. Global Escape key detection via CGEventSource (virtual keycode 53 = Escape)
+        // Operates even when Finder/Desktop is the active application
+        let isEscapeDown = CGEventSource.keyState(.combinedSessionState, key: 53)
+        if isEscapeDown && !wasEscapeDown {
+            wasEscapeDown = true
+            if latchedMode != nil {
+                cancelLatch()
+                onEscape()
+                return
+            }
+        }
+        wasEscapeDown = isEscapeDown
+
+        // 2. Mouse dragging state
         let isMouseDown = (NSEvent.pressedMouseButtons & 1) != 0
         if isMouseDown {
             pointer = NSEvent.mouseLocation
@@ -158,7 +178,6 @@ final class DragInteractionMonitor {
         isLeftMouseDragging = false
         isLikelyFileDrag = false
         lastEventDescription = "leftMouseUp"
-        // Keep latchedMode so the user can interact/confirm from HUD or click to select
     }
 
     private func refreshPasteboard(isDragging: Bool) {
@@ -166,12 +185,20 @@ final class DragInteractionMonitor {
         pasteboardChangeCount = changeCount
         hasFileURLType = Self.pasteboardHasFileURLType(pasteboard)
 
-        if isDragging && changeCount != lastSeenChangeCount && hasFileURLType {
-            lastSeenChangeCount = changeCount
-            isLikelyFileDrag = true
-            snapshotURLs = []
-        } else if isDragging && hasFileURLType && changeCount == lastSeenChangeCount {
-            isLikelyFileDrag = true
+        if isDragging && hasFileURLType {
+            if changeCount != lastSeenChangeCount {
+                lastSeenChangeCount = changeCount
+                let freshURLs = Self.readFileURLs(from: pasteboard)
+                if !freshURLs.isEmpty {
+                    snapshotURLs = freshURLs
+                }
+            } else if snapshotURLs.isEmpty {
+                let freshURLs = Self.readFileURLs(from: pasteboard)
+                if !freshURLs.isEmpty {
+                    snapshotURLs = freshURLs
+                }
+            }
+            isLikelyFileDrag = !snapshotURLs.isEmpty
         }
 
         if !isDragging {
@@ -186,9 +213,7 @@ final class DragInteractionMonitor {
 
         if let mapped = mode(for: modifiers) {
             latchedMode = mapped
-            if snapshotURLs.isEmpty {
-                snapshotFileURLsIfNeeded()
-            }
+            snapshotFileURLsIfNeeded()
         }
     }
 

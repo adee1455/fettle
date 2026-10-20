@@ -17,7 +17,7 @@ struct RadialMenuView: View {
     private let canvasSize = DesignTokens.radialCanvasSize
 
     var body: some View {
-        let actions = appState.availableActions(ringMode: mode)
+        let actions = appState.availableActions(ringMode: mode, targets: targets)
 
         ZStack {
             // Outer subtle boundary ring

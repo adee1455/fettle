@@ -120,4 +120,53 @@ final class RadialMenuTests: XCTestCase {
         XCTAssertEqual(appState.jobManager.jobs.count, 1)
         XCTAssertEqual(appState.jobManager.jobs.first?.action.id, "copy-path")
     }
+
+    func testRadialConversionRunsExclusivelyOnDraggedTargetsNotHistory() {
+        let oldItem = FileItem(
+            url: URL(fileURLWithPath: "/tmp/old_image.png"),
+            type: FileType(kind: .image, identifier: "public.png", localizedDescription: "PNG")
+        )
+        appState.items = [oldItem]
+
+        let newlyDraggedItem = FileItem(
+            url: URL(fileURLWithPath: "/tmp/new_presentation.pptx"),
+            type: FileType(kind: .document, identifier: "org.openxmlformats.presentationml.presentation", localizedDescription: "Presentation")
+        )
+
+        let action = ConversionAction(
+            id: "document-to-pdf",
+            title: "Convert to PDF",
+            subtitle: "Test",
+            systemImage: "doc.richtext",
+            ringMode: .conversion,
+            applicableKinds: [.document],
+            requiredTool: nil,
+            minSelection: 1,
+            maxSelection: nil
+        )
+
+        // Run action strictly on newlyDraggedItem
+        appState.runAction(action, targets: [newlyDraggedItem])
+
+        XCTAssertEqual(appState.jobManager.jobs.count, 1)
+        let job = appState.jobManager.jobs.first!
+        XCTAssertEqual(job.inputFiles.count, 1)
+        XCTAssertEqual(job.inputFiles.first?.url.path, "/tmp/new_presentation.pptx")
+        XCTAssertFalse(job.inputFiles.contains(where: { $0.url.path == "/tmp/old_image.png" }))
+    }
+
+    func testRadialMenuClosesAndClearsSnapshotOnEscape() {
+        let png = FileItem(
+            url: URL(fileURLWithPath: "/tmp/sample.png"),
+            type: FileType(kind: .image, identifier: "public.png", localizedDescription: "PNG")
+        )
+        appState.items = [png]
+        appState.openRadialMenuForSelection(mode: .conversion)
+
+        // Trigger onEscape closure
+        appState.dragMonitor.onEscape()
+
+        XCTAssertNil(appState.dragMonitor.latchedMode)
+        XCTAssertTrue(appState.dragMonitor.snapshotURLs.isEmpty)
+    }
 }

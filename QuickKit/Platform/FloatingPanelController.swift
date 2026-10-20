@@ -1,16 +1,21 @@
 import AppKit
 import SwiftUI
 
+final class KeyableFloatingPanel: NSPanel {
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { false }
+}
+
 @MainActor
 final class FloatingPanelController {
-    private var panel: NSPanel?
+    private var panel: KeyableFloatingPanel?
 
     func show<Content: View>(at point: NSPoint, size: NSSize = NSSize(width: 280, height: 220), @ViewBuilder content: () -> Content) {
         let hosting = NSHostingView(rootView: content())
         hosting.frame = NSRect(origin: .zero, size: size)
 
         if panel == nil {
-            let panel = NSPanel(
+            let panel = KeyableFloatingPanel(
                 contentRect: NSRect(origin: .zero, size: size),
                 styleMask: [.nonactivatingPanel, .borderless, .fullSizeContentView],
                 backing: .buffered,
