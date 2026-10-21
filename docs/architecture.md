@@ -1,10 +1,10 @@
-# QuickKit architecture
+# Fettle architecture
 
-QuickKit is a native macOS app (Swift 6, SwiftUI + AppKit). Processing services do not import SwiftUI. Conversion presets live in data so a later Windows port can reuse the same catalogue.
+Fettle is a native macOS app (Swift 6, SwiftUI + AppKit). Processing services do not import SwiftUI. Conversion presets live in data so a later Windows port can reuse the same catalogue.
 
 ## Layers
 
-- **App** — `QuickKitApp`, `AppState` composition root.
+- **App** — `FettleApp`, `AppState` composition root.
 - **Models** — `FileItem`, `FileType`, `AppSettings`, job types (jobs arrive in Milestone 2).
 - **Views** — main window, drop zone, action picker, drag HUD, settings.
 - **Services** — `FileTypeDetector`, `ToolAvailability`, `MachOReader`. Later: registry, image/media/PDF, `ProcessRunner`, `OutputManager`, `JobManager`.

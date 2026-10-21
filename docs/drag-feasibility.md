@@ -5,7 +5,7 @@
 The feasibility spike investigated whether a macOS utility can detect when a user begins dragging files from Finder, monitor modifier key presses (e.g. Shift, Command, Control), and present a floating contextual HUD/menu near the cursor **without requiring Accessibility or Input Monitoring permissions**, and **without using private Apple APIs**.
 
 **Result: FEASIBLE with documented edge cases and caveats.**
-The public combination of `NSPasteboard(name: .drag)`, `changeCount` tracking, and `NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDragged, .leftMouseUp])` reliably identifies active Finder drag operations while keeping the application fully compliant with App Store sandbox constraints if needed. QuickKit also retains the primary main-window drop zone as an unconstrained fallback.
+The public combination of `NSPasteboard(name: .drag)`, `changeCount` tracking, and `NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDragged, .leftMouseUp])` reliably identifies active Finder drag operations while keeping the application fully compliant with App Store sandbox constraints if needed. Fettle also retains the primary main-window drop zone as an unconstrained fallback.
 
 ---
 
@@ -25,7 +25,7 @@ The public combination of `NSPasteboard(name: .drag)`, `changeCount` tracking, a
 
 ### Permission Policy Matrix
 
-| Permission | Required in QuickKit? | Reason | Fallback if Unavailable |
+| Permission | Required in Fettle? | Reason | Fallback if Unavailable |
 |---|---|---|---|
 | **Accessibility** | **No** | Global event taps are avoided. | Standard window drop zone. |
 | **Input Monitoring** | **No** | `NSEvent.modifierFlags` polling used instead of `CGEventTap`. | Standard window drop zone. |
@@ -70,7 +70,7 @@ The public combination of `NSPasteboard(name: .drag)`, `changeCount` tracking, a
 ## Limitations & Engineering Recommendations
 
 1. **Pasteboard Contention / Drop Timing**:
-   Reading pasteboard objects eagerly while a drag is in flight can interfere with certain target apps. Therefore, QuickKit only inspects `pasteboard.types` (checking for `.fileURL`) during the drag, and delays `readObjects(forClasses: [NSURL.self])` until an action is explicitly invoked or confirmed.
+   Reading pasteboard objects eagerly while a drag is in flight can interfere with certain target apps. Therefore, Fettle only inspects `pasteboard.types` (checking for `.fileURL`) during the drag, and delays `readObjects(forClasses: [NSURL.self])` until an action is explicitly invoked or confirmed.
 2. **Multi-Display Edge Cases**:
    `FloatingPanelController` clamps panel positioning to `NSScreen.visibleFrame` for the active screen where `NSEvent.mouseLocation` resides to prevent the panel from spawning off-screen.
 3. **Primary vs Secondary Path**:

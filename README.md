@@ -1,47 +1,89 @@
-# QuickKit
+# Fettle for Mac
+> **Your files, in good shape.**  
+> Official Website: [fettle.itsadee.com](https://fettle.itsadee.com)
 
-A local, native macOS file utility for conversions, light editing tools, and file actions. Files stay on the machine. Originals are never overwritten silently.
+**Fettle** is a minimal, premium, native macOS file conversion and action utility designed for seamless workflow integration. Files stay 100% private on your machine—never uploaded to the cloud, and original files are never overwritten.
 
-This repository currently contains **Milestone 1**: the app shell, file drop zone, tool detection, and a Finder-drag feasibility prototype.
+Built specifically for Apple Silicon and macOS 14+, Fettle features an instant **Shift-drag Radial Menu** in Finder, an interactive **Action Picker**, native background job processing, and automatic in-place output saving with collision-safe naming.
 
-## Requirements
+---
 
-- macOS 14 or later (developed on an Apple silicon Mac running macOS 27.0.1 with Xcode 27.1)
-- Xcode 16 or later (this machine has Xcode 27.1)
-- Optional Homebrew tools, detected at runtime:
-  - `ffmpeg` / `ffprobe` — media (must be **arm64** on Apple silicon)
-  - `imagemagick` (`magick`) — extra image formats
-  - `qpdf` — optional PDF extras
-  - `webp` (`cwebp` / `dwebp`) — optional WebP CLI
+## ✨ Key Features
 
-Do not copy binaries from other apps. QuickKit does not bundle FFmpeg, ImageMagick, or qpdf yet.
+- **🎯 Shift-Drag Radial Menu in Finder & Desktop**:
+  - Select files in Finder or on your Desktop, start dragging, and tap/hold **Shift** (or **Command** / **Control**).
+  - An intelligent radial menu appears around your cursor presenting smart context-aware conversion actions (e.g. PNG → WebP, JPEG, PDF; PPTX/DOCX → PDF; MP4 → MP3).
+  - Tap number keys **`1`–`9`**, use arrow keys, or release directly over a slice to trigger instant conversion.
+  - Press **`Esc`** at any time to immediately dismiss without performing actions.
 
-## Build
+- **⚡ Smart Action Picker (`Return` or `⌘R`)**:
+  - Automatically identifies loaded file types and suggests the most relevant conversions first (marked with **SUGGESTED** badges).
+  - Searchable by action title, target extension, or category.
+  - Full keyboard navigation: **`↑` / `↓`** arrows to browse, **`Return`** to execute.
 
+- **📁 In-Place Output & Original Preservation**:
+  - Converted files save directly alongside your original files in their parent directory.
+  - Automatic collision protection ensures original files are never overwritten (e.g., `photo (1).webp`).
+
+- **🔔 Instant Completion Toast & Finder Reveal**:
+  - Non-intrusive floating completion toast slides in when tasks finish.
+  - One-click **"Show in Finder"** button highlights the newly generated output file in Finder.
+  - Converted items in the file list display a green status pill with a Finder shortcut.
+
+- **🔒 100% Private & Native**:
+  - Powered by macOS built-in native engines: **Image I/O**, **PDFKit**, **CoreText**, and **AVFoundation**.
+  - Silent background detection for optional external CLI tools (**FFmpeg**, **ImageMagick**, **qpdf**).
+
+---
+
+## 🚀 Supported Conversions & Actions
+
+| Category | Native Actions | Optional CLI Enhancements |
+| :--- | :--- | :--- |
+| **Images** | PNG ↔ JPEG, Image → WebP, HEIC → JPEG, 50% Resize, Strip EXIF Metadata | Advanced format filters via ImageMagick |
+| **PDF & Docs** | Merge Multiple PDFs, Images → PDF, Split PDF Pages, Text / RTF → PDF | PDF linearization & decryption via `qpdf` |
+| **Media** | Video → MP4 (H.264 / HEVC), Audio Extraction (MP3, AAC, WAV), Video Thumbnail | GIF encoding & deep transcoding via `ffmpeg` |
+| **File Actions**| Reveal in Finder, Copy Absolute Path, Duplicate File | — |
+
+---
+
+## ⌨️ Keyboard Shortcuts
+
+| Shortcut | Description |
+| :--- | :--- |
+| **Hold `Shift` (during Finder drag)** | Open context-aware Radial Menu at cursor position |
+| **`1` – `9`** | Trigger radial slice action directly |
+| **`←` / `→` / `↑` / `↓`** | Cycle through radial actions or Action Picker items |
+| **`Return`** | Execute selected action / Open Action Picker |
+| **`Esc`** | Dismiss Radial Menu / Action Picker |
+| **`⌘R`** | Open Radial Menu for current selection |
+| **`⌘,`** | Open Settings (output folders, concurrent worker limits) |
+
+---
+
+## 🛠️ Building & Testing
+
+### Requirements
+- macOS 14.0 or later (Optimized for Apple Silicon `arm64`)
+- Xcode 15 or later
+
+### Build & Run Tests
 ```bash
-cd /Users/adee/Web-Development/quickcon
-xcodegen generate   # only needed after editing project.yml
-xcodebuild -scheme QuickKit -configuration Debug build
-xcodebuild -scheme QuickKit -configuration Debug test
+# Run unit and integration tests (67 automated tests)
+xcodebuild test -scheme Fettle -destination 'platform=macOS'
+
+# Build Debug binary
+xcodebuild -scheme Fettle -configuration Debug build
 ```
 
-Open `QuickKit.xcodeproj` in Xcode to run the app.
+### Packaging Distribution Artifacts (.dmg & .zip)
+Run the automated release packaging script:
+```bash
+./scripts/package.sh
+```
+This builds the `Release` configuration, ad-hoc codesigns the `.app` bundle, generates `dist/Fettle-macOS.dmg`, and creates `dist/Fettle-macOS.zip`.
 
-## Current machine notes
+---
 
-On the development Mac:
-
-- `/usr/local/bin/ffmpeg` is an **x86_64** Intel binary and cannot run (`bad CPU type`). QuickKit reports it as incompatible, not as a working encoder.
-- ImageMagick and qpdf are not installed. Image I/O and PDFKit will cover the first conversion/PDF milestones.
-
-Install an Apple silicon FFmpeg later with `brew install ffmpeg` (Homebrew prefix `/opt/homebrew`).
-
-## Interaction
-
-1. Drop files onto the main window (always supported).
-2. Choose **Action Picker** or press Return while QuickKit is focused.
-3. Optional spike: drag a file from Finder and press Shift, Command, or Control. The drag HUD reports whether public pasteboard tracking sees the drag. See [docs/drag-feasibility.md](docs/drag-feasibility.md).
-
-## Licence
-
-Application source is intended to be MIT; confirm before a public release. Third-party tool licences are listed in [docs/dependencies.md](docs/dependencies.md).
+## 📄 License
+Fettle is open source under the MIT License.

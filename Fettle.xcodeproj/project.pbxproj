@@ -1,0 +1,626 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 54;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		01314804E3E24F7461D08D4F /* MediaServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40132241813F6449C88008DA /* MediaServiceTests.swift */; };
+		099F748C989988CC630B61F1 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08E75DAF78FC0B3B9745206F /* AppState.swift */; };
+		0BA42DF433E69A94A5A7F227 /* DragInteractionMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBB1B4F44A39280F4530F624 /* DragInteractionMonitor.swift */; };
+		16B8971CDCD3D26B37454CFB /* MediaService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 058A6C4BC9B744648D347D77 /* MediaService.swift */; };
+		1BC7A983B3E7282C9B02F913 /* DocumentServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4241BBD5642DC70B7837613 /* DocumentServiceTests.swift */; };
+		22F85A9BA482BE3D66A781EA /* OutputManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB40EEA11ABFBD73911EEECF /* OutputManager.swift */; };
+		26B16AA98414E7B553069797 /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B73F7A3D590DF8005F7EEA2 /* DesignTokens.swift */; };
+		2EC48D14564C25E94B955465 /* ToolAvailabilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3593A7BF0C7BA706B208075 /* ToolAvailabilityTests.swift */; };
+		30FCBE5BEA7EE7D0ED4B80CF /* JobManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BA7631A3AE65371DE970931 /* JobManagerTests.swift */; };
+		321CE0182FFA14AE820613B9 /* MainWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C4B544F40AB2C024ED8F735 /* MainWindow.swift */; };
+		33C0AB514A4B089F54A6F3AD /* PDFServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B6694EDBCC4C9084981591B /* PDFServiceTests.swift */; };
+		42D206A437F1CE7158F8CA61 /* ActionRegistryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1138377CD0CC325BF73EBF40 /* ActionRegistryTests.swift */; };
+		448F3BDC7E2ECA476C38AD2A /* FileItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC26B3E531442384428D9B7C /* FileItem.swift */; };
+		449344705EE97DDCF765E508 /* DropZoneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C253443A784A6239B099FA7E /* DropZoneView.swift */; };
+		4D5D2F9DA5DD644772270A44 /* OutputManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F4C3B2BE6E23797E7AF3713 /* OutputManagerTests.swift */; };
+		5BF1E27D6974A29E96221503 /* ImageServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F155A951652053C940FDB466 /* ImageServiceTests.swift */; };
+		5F62A3E09C6989DB082715AB /* Job.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A7373E0BEDB0CDCD84D3AF1 /* Job.swift */; };
+		610E1973F33EDC42056959A4 /* CompletionToastView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14F855D842754F732D8B9FF8 /* CompletionToastView.swift */; };
+		647AE6828DBFA32FE27BFEF9 /* JobQueueView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F988E7B558EFEA173BA30D4 /* JobQueueView.swift */; };
+		6D253018FAE54E5B46397169 /* FileTypeDetectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3720C68E6FB0164E63C9893E /* FileTypeDetectorTests.swift */; };
+		6F295A5DEC679C62A45C3F3D /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68AC8EF44E4496E68EB843F5 /* AppSettings.swift */; };
+		7693B7E4E16E0486DFA0FDAC /* ImageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B1DCD378AD4CF1DE6DA507A /* ImageService.swift */; };
+		7D142D930DF58FDB7BCF86A1 /* RadialMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0AB0E81D2F2205E2F541D41 /* RadialMenuView.swift */; };
+		808A3A93E1C6634C6E1EC7B5 /* ActionRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12774B528066D3763BF90FD /* ActionRegistry.swift */; };
+		82EFC8B7DF431F1B8A426B59 /* ProcessRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74F9B1BF28F8024EDA8D0C1F /* ProcessRunner.swift */; };
+		8D1ABC7705B50DBB7206CAA1 /* ConversionAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E9191A205272447F99D527 /* ConversionAction.swift */; };
+		9158DCBAACE5E78E0789F7C5 /* PDFService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E79F3373F0D61405CF04BBE /* PDFService.swift */; };
+		941C7DC62A080DA0DF4BE481 /* FettleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41630AC307C8F3317FFE71AE /* FettleApp.swift */; };
+		A077F9692B4CEAEB748704EE /* ActionPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 192CE91F62B31B5F4F06CC3D /* ActionPickerView.swift */; };
+		B702DBCD423B15061574019A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 65E8F5E6E36912EFE3BCC153 /* Assets.xcassets */; };
+		B70A6CC11B5777A2613B98A4 /* RadialMenuTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CE58329793631DEFD9F313B /* RadialMenuTests.swift */; };
+		BD225D4E8DC17A54599C8EF1 /* FileListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24EA6DB9E8819D0933A0D147 /* FileListView.swift */; };
+		C3DD906BC1480E3DC7D6ADE8 /* MachOReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EC8E7B1346627B5E0CC81C9 /* MachOReader.swift */; };
+		C5CE47CB27F13F6574FFF69C /* DocumentService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDC8542EFF815EA020F845FD /* DocumentService.swift */; };
+		C796C869F13DE51488F4E1FC /* FloatingPanelController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFDDAC3E56606D4DC850F16F /* FloatingPanelController.swift */; };
+		D34DD8E1BA29EC928B1A5BFE /* FileType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C19D406A42291EEF4E68090 /* FileType.swift */; };
+		E96062891CEAAD75C508FEFD /* FileTypeDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61C93E012589BBBDAA61F1FD /* FileTypeDetector.swift */; };
+		F1E595F5A80B9A3FA4916C80 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20A721DED1FEFBF4ABF2582 /* SettingsView.swift */; };
+		F27F350C1D370E40E08E6E29 /* JobManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D138DE19071DC407EC7B215 /* JobManager.swift */; };
+		F7A36396CA1DD46AC2403642 /* ProcessRunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE2C6D1C9D0D56FB721BBF2 /* ProcessRunnerTests.swift */; };
+		FC2065CB7C44094EAAF00CCA /* ToolAvailability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BEC9DA4B0F919B46485583C /* ToolAvailability.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		70C8256D47FAF3B28FBE69F0 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 290E7F60E0C099F89B8780E4 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 843A42384949E6B5D8200238;
+			remoteInfo = Fettle;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		058A6C4BC9B744648D347D77 /* MediaService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaService.swift; sourceTree = "<group>"; };
+		08E75DAF78FC0B3B9745206F /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		0C4B544F40AB2C024ED8F735 /* MainWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindow.swift; sourceTree = "<group>"; };
+		0E79F3373F0D61405CF04BBE /* PDFService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFService.swift; sourceTree = "<group>"; };
+		1138377CD0CC325BF73EBF40 /* ActionRegistryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionRegistryTests.swift; sourceTree = "<group>"; };
+		14F855D842754F732D8B9FF8 /* CompletionToastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletionToastView.swift; sourceTree = "<group>"; };
+		192CE91F62B31B5F4F06CC3D /* ActionPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionPickerView.swift; sourceTree = "<group>"; };
+		1CE58329793631DEFD9F313B /* RadialMenuTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadialMenuTests.swift; sourceTree = "<group>"; };
+		24EA6DB9E8819D0933A0D147 /* FileListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileListView.swift; sourceTree = "<group>"; };
+		2B73F7A3D590DF8005F7EEA2 /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignTokens.swift; sourceTree = "<group>"; };
+		33DF06BDA997C12CD8350A8D /* Fettle.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Fettle.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3720C68E6FB0164E63C9893E /* FileTypeDetectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileTypeDetectorTests.swift; sourceTree = "<group>"; };
+		3B6694EDBCC4C9084981591B /* PDFServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFServiceTests.swift; sourceTree = "<group>"; };
+		40132241813F6449C88008DA /* MediaServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaServiceTests.swift; sourceTree = "<group>"; };
+		41630AC307C8F3317FFE71AE /* FettleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FettleApp.swift; sourceTree = "<group>"; };
+		4EC8E7B1346627B5E0CC81C9 /* MachOReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MachOReader.swift; sourceTree = "<group>"; };
+		4FE2C6D1C9D0D56FB721BBF2 /* ProcessRunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessRunnerTests.swift; sourceTree = "<group>"; };
+		5BA7631A3AE65371DE970931 /* JobManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JobManagerTests.swift; sourceTree = "<group>"; };
+		5BEC9DA4B0F919B46485583C /* ToolAvailability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolAvailability.swift; sourceTree = "<group>"; };
+		5F4C3B2BE6E23797E7AF3713 /* OutputManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutputManagerTests.swift; sourceTree = "<group>"; };
+		61C93E012589BBBDAA61F1FD /* FileTypeDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileTypeDetector.swift; sourceTree = "<group>"; };
+		65E8F5E6E36912EFE3BCC153 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		68AC8EF44E4496E68EB843F5 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		74F9B1BF28F8024EDA8D0C1F /* ProcessRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessRunner.swift; sourceTree = "<group>"; };
+		75E9191A205272447F99D527 /* ConversionAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversionAction.swift; sourceTree = "<group>"; };
+		7CE7E98CE3E2062F11E339D6 /* FettleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FettleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		8A7373E0BEDB0CDCD84D3AF1 /* Job.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Job.swift; sourceTree = "<group>"; };
+		8B1DCD378AD4CF1DE6DA507A /* ImageService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageService.swift; sourceTree = "<group>"; };
+		8C19D406A42291EEF4E68090 /* FileType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileType.swift; sourceTree = "<group>"; };
+		8F988E7B558EFEA173BA30D4 /* JobQueueView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JobQueueView.swift; sourceTree = "<group>"; };
+		9D138DE19071DC407EC7B215 /* JobManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JobManager.swift; sourceTree = "<group>"; };
+		A0AB0E81D2F2205E2F541D41 /* RadialMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadialMenuView.swift; sourceTree = "<group>"; };
+		B3593A7BF0C7BA706B208075 /* ToolAvailabilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolAvailabilityTests.swift; sourceTree = "<group>"; };
+		BC26B3E531442384428D9B7C /* FileItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileItem.swift; sourceTree = "<group>"; };
+		C253443A784A6239B099FA7E /* DropZoneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DropZoneView.swift; sourceTree = "<group>"; };
+		CBB1B4F44A39280F4530F624 /* DragInteractionMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragInteractionMonitor.swift; sourceTree = "<group>"; };
+		D4241BBD5642DC70B7837613 /* DocumentServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentServiceTests.swift; sourceTree = "<group>"; };
+		DFDDAC3E56606D4DC850F16F /* FloatingPanelController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingPanelController.swift; sourceTree = "<group>"; };
+		E12774B528066D3763BF90FD /* ActionRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionRegistry.swift; sourceTree = "<group>"; };
+		E20A721DED1FEFBF4ABF2582 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		EDC8542EFF815EA020F845FD /* DocumentService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentService.swift; sourceTree = "<group>"; };
+		F155A951652053C940FDB466 /* ImageServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageServiceTests.swift; sourceTree = "<group>"; };
+		F7DDF15893383B0E6BD055D0 /* Fettle.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Fettle.entitlements; sourceTree = "<group>"; };
+		FB40EEA11ABFBD73911EEECF /* OutputManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutputManager.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		13B479D4662108ECCFF9DD8F /* FettleTests */ = {
+			isa = PBXGroup;
+			children = (
+				1138377CD0CC325BF73EBF40 /* ActionRegistryTests.swift */,
+				D4241BBD5642DC70B7837613 /* DocumentServiceTests.swift */,
+				3720C68E6FB0164E63C9893E /* FileTypeDetectorTests.swift */,
+				F155A951652053C940FDB466 /* ImageServiceTests.swift */,
+				5BA7631A3AE65371DE970931 /* JobManagerTests.swift */,
+				40132241813F6449C88008DA /* MediaServiceTests.swift */,
+				5F4C3B2BE6E23797E7AF3713 /* OutputManagerTests.swift */,
+				3B6694EDBCC4C9084981591B /* PDFServiceTests.swift */,
+				4FE2C6D1C9D0D56FB721BBF2 /* ProcessRunnerTests.swift */,
+				1CE58329793631DEFD9F313B /* RadialMenuTests.swift */,
+				B3593A7BF0C7BA706B208075 /* ToolAvailabilityTests.swift */,
+			);
+			path = FettleTests;
+			sourceTree = "<group>";
+		};
+		3CC0B66C5545675D9494D439 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				E12774B528066D3763BF90FD /* ActionRegistry.swift */,
+				EDC8542EFF815EA020F845FD /* DocumentService.swift */,
+				61C93E012589BBBDAA61F1FD /* FileTypeDetector.swift */,
+				8B1DCD378AD4CF1DE6DA507A /* ImageService.swift */,
+				9D138DE19071DC407EC7B215 /* JobManager.swift */,
+				4EC8E7B1346627B5E0CC81C9 /* MachOReader.swift */,
+				058A6C4BC9B744648D347D77 /* MediaService.swift */,
+				FB40EEA11ABFBD73911EEECF /* OutputManager.swift */,
+				0E79F3373F0D61405CF04BBE /* PDFService.swift */,
+				74F9B1BF28F8024EDA8D0C1F /* ProcessRunner.swift */,
+				5BEC9DA4B0F919B46485583C /* ToolAvailability.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		575B5C768F9A375AE59C866A = {
+			isa = PBXGroup;
+			children = (
+				DADA7E4E86AC965F6A4F1EE1 /* Fettle */,
+				13B479D4662108ECCFF9DD8F /* FettleTests */,
+				E51FA41046461DA2C95DCF31 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		5BEA8DD4DA5ECF7E412B22EC /* Platform */ = {
+			isa = PBXGroup;
+			children = (
+				CBB1B4F44A39280F4530F624 /* DragInteractionMonitor.swift */,
+				DFDDAC3E56606D4DC850F16F /* FloatingPanelController.swift */,
+			);
+			path = Platform;
+			sourceTree = "<group>";
+		};
+		B4DE2D6D317732DA9A4BB9BF /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				68AC8EF44E4496E68EB843F5 /* AppSettings.swift */,
+				75E9191A205272447F99D527 /* ConversionAction.swift */,
+				BC26B3E531442384428D9B7C /* FileItem.swift */,
+				8C19D406A42291EEF4E68090 /* FileType.swift */,
+				8A7373E0BEDB0CDCD84D3AF1 /* Job.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		B8E2CB2235A65D8A88BEFB07 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				08E75DAF78FC0B3B9745206F /* AppState.swift */,
+				41630AC307C8F3317FFE71AE /* FettleApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		DADA7E4E86AC965F6A4F1EE1 /* Fettle */ = {
+			isa = PBXGroup;
+			children = (
+				65E8F5E6E36912EFE3BCC153 /* Assets.xcassets */,
+				F7DDF15893383B0E6BD055D0 /* Fettle.entitlements */,
+				B8E2CB2235A65D8A88BEFB07 /* App */,
+				B4DE2D6D317732DA9A4BB9BF /* Models */,
+				5BEA8DD4DA5ECF7E412B22EC /* Platform */,
+				3CC0B66C5545675D9494D439 /* Services */,
+				EDAFC67CD657F0270CECD494 /* Views */,
+			);
+			path = Fettle;
+			sourceTree = "<group>";
+		};
+		E51FA41046461DA2C95DCF31 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				33DF06BDA997C12CD8350A8D /* Fettle.app */,
+				7CE7E98CE3E2062F11E339D6 /* FettleTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		EDAFC67CD657F0270CECD494 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				192CE91F62B31B5F4F06CC3D /* ActionPickerView.swift */,
+				14F855D842754F732D8B9FF8 /* CompletionToastView.swift */,
+				2B73F7A3D590DF8005F7EEA2 /* DesignTokens.swift */,
+				C253443A784A6239B099FA7E /* DropZoneView.swift */,
+				24EA6DB9E8819D0933A0D147 /* FileListView.swift */,
+				8F988E7B558EFEA173BA30D4 /* JobQueueView.swift */,
+				0C4B544F40AB2C024ED8F735 /* MainWindow.swift */,
+				A0AB0E81D2F2205E2F541D41 /* RadialMenuView.swift */,
+				E20A721DED1FEFBF4ABF2582 /* SettingsView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		7A206EDC00794CD6B6E55D61 /* FettleTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4D7857308158CE1DC23D23D6 /* Build configuration list for PBXNativeTarget "FettleTests" */;
+			buildPhases = (
+				2F16566D1AB056734EFC9F4B /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				EFE6D881FFF60E0344182F56 /* PBXTargetDependency */,
+			);
+			name = FettleTests;
+			packageProductDependencies = (
+			);
+			productName = FettleTests;
+			productReference = 7CE7E98CE3E2062F11E339D6 /* FettleTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		843A42384949E6B5D8200238 /* Fettle */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A8A89B73C94EB58B4777E14D /* Build configuration list for PBXNativeTarget "Fettle" */;
+			buildPhases = (
+				76D3A832DBFBD02C04760767 /* Sources */,
+				7E9ABF03E5DDED22FC7777C3 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Fettle;
+			packageProductDependencies = (
+			);
+			productName = Fettle;
+			productReference = 33DF06BDA997C12CD8350A8D /* Fettle.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		290E7F60E0C099F89B8780E4 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					7A206EDC00794CD6B6E55D61 = {
+						ProvisioningStyle = Automatic;
+					};
+					843A42384949E6B5D8200238 = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 867FB992293FB79B6F5A44AE /* Build configuration list for PBXProject "Fettle" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 575B5C768F9A375AE59C866A;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 54;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				843A42384949E6B5D8200238 /* Fettle */,
+				7A206EDC00794CD6B6E55D61 /* FettleTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		7E9ABF03E5DDED22FC7777C3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B702DBCD423B15061574019A /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		2F16566D1AB056734EFC9F4B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				42D206A437F1CE7158F8CA61 /* ActionRegistryTests.swift in Sources */,
+				1BC7A983B3E7282C9B02F913 /* DocumentServiceTests.swift in Sources */,
+				6D253018FAE54E5B46397169 /* FileTypeDetectorTests.swift in Sources */,
+				5BF1E27D6974A29E96221503 /* ImageServiceTests.swift in Sources */,
+				30FCBE5BEA7EE7D0ED4B80CF /* JobManagerTests.swift in Sources */,
+				01314804E3E24F7461D08D4F /* MediaServiceTests.swift in Sources */,
+				4D5D2F9DA5DD644772270A44 /* OutputManagerTests.swift in Sources */,
+				33C0AB514A4B089F54A6F3AD /* PDFServiceTests.swift in Sources */,
+				F7A36396CA1DD46AC2403642 /* ProcessRunnerTests.swift in Sources */,
+				B70A6CC11B5777A2613B98A4 /* RadialMenuTests.swift in Sources */,
+				2EC48D14564C25E94B955465 /* ToolAvailabilityTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		76D3A832DBFBD02C04760767 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A077F9692B4CEAEB748704EE /* ActionPickerView.swift in Sources */,
+				808A3A93E1C6634C6E1EC7B5 /* ActionRegistry.swift in Sources */,
+				6F295A5DEC679C62A45C3F3D /* AppSettings.swift in Sources */,
+				099F748C989988CC630B61F1 /* AppState.swift in Sources */,
+				610E1973F33EDC42056959A4 /* CompletionToastView.swift in Sources */,
+				8D1ABC7705B50DBB7206CAA1 /* ConversionAction.swift in Sources */,
+				26B16AA98414E7B553069797 /* DesignTokens.swift in Sources */,
+				C5CE47CB27F13F6574FFF69C /* DocumentService.swift in Sources */,
+				0BA42DF433E69A94A5A7F227 /* DragInteractionMonitor.swift in Sources */,
+				449344705EE97DDCF765E508 /* DropZoneView.swift in Sources */,
+				941C7DC62A080DA0DF4BE481 /* FettleApp.swift in Sources */,
+				448F3BDC7E2ECA476C38AD2A /* FileItem.swift in Sources */,
+				BD225D4E8DC17A54599C8EF1 /* FileListView.swift in Sources */,
+				D34DD8E1BA29EC928B1A5BFE /* FileType.swift in Sources */,
+				E96062891CEAAD75C508FEFD /* FileTypeDetector.swift in Sources */,
+				C796C869F13DE51488F4E1FC /* FloatingPanelController.swift in Sources */,
+				7693B7E4E16E0486DFA0FDAC /* ImageService.swift in Sources */,
+				5F62A3E09C6989DB082715AB /* Job.swift in Sources */,
+				F27F350C1D370E40E08E6E29 /* JobManager.swift in Sources */,
+				647AE6828DBFA32FE27BFEF9 /* JobQueueView.swift in Sources */,
+				C3DD906BC1480E3DC7D6ADE8 /* MachOReader.swift in Sources */,
+				321CE0182FFA14AE820613B9 /* MainWindow.swift in Sources */,
+				16B8971CDCD3D26B37454CFB /* MediaService.swift in Sources */,
+				22F85A9BA482BE3D66A781EA /* OutputManager.swift in Sources */,
+				9158DCBAACE5E78E0789F7C5 /* PDFService.swift in Sources */,
+				82EFC8B7DF431F1B8A426B59 /* ProcessRunner.swift in Sources */,
+				7D142D930DF58FDB7BCF86A1 /* RadialMenuView.swift in Sources */,
+				F1E595F5A80B9A3FA4916C80 /* SettingsView.swift in Sources */,
+				FC2065CB7C44094EAAF00CCA /* ToolAvailability.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		EFE6D881FFF60E0344182F56 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 843A42384949E6B5D8200238 /* Fettle */;
+			targetProxy = 70C8256D47FAF3B28FBE69F0 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		27D9F0306A126D89825F5AFF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		373B904DB2EEB20A99CBBA16 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Fettle/Fettle.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_TESTABILITY = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Fettle;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2026";
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.itsadee.fettle;
+				PRODUCT_NAME = Fettle;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		3A23A14C2F68B0742CE2547A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.itsadee.fettleTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Fettle.app/Contents/MacOS/Fettle";
+			};
+			name = Debug;
+		};
+		9544A20D034086172AF61F87 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Fettle/Fettle.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_TESTABILITY = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Fettle;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2026";
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.itsadee.fettle;
+				PRODUCT_NAME = Fettle;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		98C5114A7EDA30E014CDCF62 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		D4BDAD4075CEBFC3E8E31D6D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.itsadee.fettleTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Fettle.app/Contents/MacOS/Fettle";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		4D7857308158CE1DC23D23D6 /* Build configuration list for PBXNativeTarget "FettleTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3A23A14C2F68B0742CE2547A /* Debug */,
+				D4BDAD4075CEBFC3E8E31D6D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		867FB992293FB79B6F5A44AE /* Build configuration list for PBXProject "Fettle" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				98C5114A7EDA30E014CDCF62 /* Debug */,
+				27D9F0306A126D89825F5AFF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		A8A89B73C94EB58B4777E14D /* Build configuration list for PBXNativeTarget "Fettle" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				373B904DB2EEB20A99CBBA16 /* Debug */,
+				9544A20D034086172AF61F87 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 290E7F60E0C099F89B8780E4 /* Project object */;
+}

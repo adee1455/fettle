@@ -1,6 +1,6 @@
 # Conversion Presets Specification
 
-QuickKit defines conversion operations as declarative data structures rather than embedding logic inside UI controls. This architecture ensures presets can be ported to other platforms (such as Windows or Linux) or exposed through headless CLI runners without altering view models.
+Fettle defines conversion operations as declarative data structures rather than embedding logic inside UI controls. This architecture ensures presets can be ported to other platforms (such as Windows or Linux) or exposed through headless CLI runners without altering view models.
 
 ## 1. Image Presets
 

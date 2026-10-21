@@ -1,6 +1,6 @@
-name: QuickKit
+name: Fettle
 options:
-  bundleIdPrefix: dev.adee
+  bundleIdPrefix: com.itsadee
   deploymentTarget:
     macOS: "14.0"
   createIntermediateGroups: true
@@ -10,23 +10,24 @@ settings:
   MACOSX_DEPLOYMENT_TARGET: "14.0"
   SWIFT_STRICT_CONCURRENCY: complete
 targets:
-  QuickKit:
+  Fettle:
     type: application
     platform: macOS
     sources:
-      - path: QuickKit
+      - path: Fettle
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: dev.adee.QuickKit
-        PRODUCT_NAME: QuickKit
+        PRODUCT_BUNDLE_IDENTIFIER: com.itsadee.fettle
+        PRODUCT_NAME: Fettle
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
         GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_KEY_CFBundleDisplayName: QuickKit
+        INFOPLIST_KEY_CFBundleDisplayName: Fettle
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
+        INFOPLIST_KEY_LSUIElement: YES
         INFOPLIST_KEY_NSHumanReadableCopyright: "Copyright © 2026"
         INFOPLIST_KEY_NSPrincipalClass: NSApplication
-        CODE_SIGN_ENTITLEMENTS: QuickKit/QuickKit.entitlements
+        CODE_SIGN_ENTITLEMENTS: Fettle/Fettle.entitlements
         CODE_SIGN_STYLE: Automatic
         CODE_SIGN_IDENTITY: "-"
         ENABLE_HARDENED_RUNTIME: YES
@@ -37,19 +38,19 @@ targets:
           - "@executable_path/../Frameworks"
     scheme:
       testTargets:
-        - QuickKitTests
-  QuickKitTests:
+        - FettleTests
+  FettleTests:
     type: bundle.unit-test
     platform: macOS
     sources:
-      - path: QuickKitTests
+      - path: FettleTests
     dependencies:
-      - target: QuickKit
+      - target: Fettle
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: dev.adee.QuickKitTests
+        PRODUCT_BUNDLE_IDENTIFIER: com.itsadee.fettleTests
         GENERATE_INFOPLIST_FILE: YES
         CODE_SIGN_STYLE: Automatic
         CODE_SIGN_IDENTITY: "-"
-        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/QuickKit.app/Contents/MacOS/QuickKit"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Fettle.app/Contents/MacOS/Fettle"
         BUNDLE_LOADER: "$(TEST_HOST)"
